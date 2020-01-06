@@ -10,7 +10,7 @@ For further questions feel free to contact me via mail: jakob.weyel@tu-darmstadt
 
 For 'plug and play' use install anaconda as your python and use scipy as I do.
 
-Executing this script opens a GUI with several features:
+Executing this script opens a GUI with several buttons:
 
 TRS->PSD:
   Reads time resolved spectral data, processes them according to PSD and saves the resulting phase resolved spectra as .txt.
