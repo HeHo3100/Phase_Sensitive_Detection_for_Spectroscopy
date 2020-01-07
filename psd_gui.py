@@ -3,7 +3,7 @@
 Created on Mon May 13 09:15:18 2019 by Jakob Weyel, Eduard-Zintl-Institut für
 Anorganische und Physikalische Chemie, TU Darmstadt
 
-If wanted you can include a fourier series of your choice (change the parameter
+If want, you can include a fourier series of your choice (change the parameter
 k as you like) in PSD_calc instead of a simple sin function to describe the
 periodic stimulation which is part of the convolution in the fourier
 transformation.
