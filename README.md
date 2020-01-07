@@ -1,7 +1,8 @@
 # Phase_Sensitive_Detection_for_Spectroscopy
 A GUI with multiple features that executes Phase Sensitive Detection in Modulation Excitation Spectroscopy to get from time
 resolved data to phase resolved spectra.
-The raw data used by me were collected via DRIFT Spectroscopy.
+The raw data used by me were collected via DRIFT Spectroscopy but this script is applicable to all other time resolved
+spectroscopic techniques.
 
 A spectroscopic data processing tool by Jakob Weyel, Eduard-Zintl-Institut für Anorganische und Physikalische Chemie,
 TU Darmstadt
