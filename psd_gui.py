@@ -26,6 +26,8 @@ from scipy import integrate as igr
 import matplotlib.pyplot as plt
 import pandas as pd
 
+plt.style.use(r"C:\Users\Haase-Gast\HESSENBOX-DA\Kram\TU_Design.mplstyle")
+
 '''
 _______________________________________________________________________________
 Dialogue box (YES/NO) with save button
@@ -58,7 +60,7 @@ _______________________________________________________________________________
 '''
 
 def Spectra_diff():
-    #Loads number of spectra per period from textbox 'myEntry01'
+    #Loads number of spectra per period from textbox 'Entry_n_sp'
     text = 'Path of your catalyst spectra'
     name_dataCat = myFileOpen(text)
     
@@ -101,16 +103,16 @@ def PSD_calc(): #Calculates PSD spectra
     #Number of spectra per period, periods to cut off, phase resolution and the path are input via the GUI
     start = time.time()
     
-    n_sp = int(myEntry01.get()) #Number of spectra per period
-    cutoff_per = int(myEntry02.get()) #Number of periods to cut off
+    n_sp = int(Entry_n_sp.get()) #Number of spectra per period
+    cutoff_per = int(Entry_cutoff_per.get()) #Number of periods to cut off
     cutoff_sp = n_sp*cutoff_per #Calculated number of spectra to cut off
-    dphi = int(myEntry03.get()) #Phasse resolution
+    dphi = int(Entry_dphi.get()) #Phasse resolution
     
     text = 'Path of your catalyst spectra'
     name_dataCat = myFileOpen(text)
     
     name_t = name_dataCat.split('.')
-    name_t = name_t[0] + '_t.dpt'
+    name_t = name_t[0] + '_t.' + name_t[1]
     
     text = 'DatPath of your reference spectra'    
     name_dataRef = myFileOpen(text)
@@ -118,6 +120,10 @@ def PSD_calc(): #Calculates PSD spectra
     #Data of catalyst spectra and reference spectra
     dataCat = np.genfromtxt(r''+name_dataCat, delimiter="\t")
     t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
+    
+    #If t_inp is 1D array convert to 2D array for proper indexing
+    if t_inp.ndim == 1:
+        t_inp = np.reshape(t_inp,(t_inp.size,1))
     
     if name_dataRef!= '':
         dataRef = np.genfromtxt(r''+name_dataRef, delimiter="\t")
@@ -134,8 +140,25 @@ def PSD_calc(): #Calculates PSD spectra
         data = np.delete(data, np.s_[1:cutoff_sp+1], axis = 1)
         t_inp = np.delete(t_inp,np.s_[-(cutoff_sp):],axis = 0)
         
+    ''''''
+    n_per = t_inp.shape[0]/n_sp # number of periods by dividing number of spectra by number of spectra per period
+    
+    
+    # Averaging all periods into one period
+    
+    Energy_values = (data[:,0]) # Cache the energy values / wavenumbers
+    
+    Energy_values = np.reshape(Energy_values,(Energy_values.size,1)) # Make 2D array for further computations
+    
+    spectra_per = np.split(data[:,1:], n_per, axis = 1) # Split the wholeness of all spectra in 'data' into minor ndarrays for each period
+    
+    sum_spectra_per = np.divide(sum(spectra_per),n_per) # sum up all cells of the created ndarrays that have the same index and divide by the number of periods
+        
+    data = np.concatenate((Energy_values, sum_spectra_per),axis = 1) # Concatenate Energy_values and averaged spectra back into 'data'
+    ''''''
+        
     #Definition of values for the fourier transformation
-#'''    k = 1 #set k>1 for modeling a rectangular function via fourier synthesis which will be folded with the time resolved spectra'''
+    # '''    k = 1 #set k>1 for modeling a rectangular function via fourier synthesis which will be folded with the time resolved spectra'''
     omega = 2*np.pi/t_inp[int(n_sp),0] #omega as 2pi/t_OnePeriod, t_OnePeriod is generated from the number of measurements until the second period begins
     phi = np.arange(0,361,dphi) #phi is the phase shift which occurs as answer of the system to the external stimulation in the experiment
     
@@ -147,7 +170,7 @@ def PSD_calc(): #Calculates PSD spectra
     for k in np.arange(1,2): #set k>1 for modeling a rectangular function via fourier synthesis which will be folded with the time resolved spectra
         for i in range(1,len(phi)+1):
             for j in range(0,len(data[:,0])):
-                dummy[j,i] = igr.trapz(data[j,1:]*(1/(2*k))*np.sin((2*k-1)*omega*t_inp[:,0]+phi[i-1]*2*np.pi/360))
+                dummy[j,i] = igr.trapz(data[j,1:]*(1/(2*k))*np.sin((2*k-1)*omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360))
     spectra[:,1:] = spectra[:,1:]+dummy[:,1:]
     
     #Plot spectra
@@ -212,7 +235,7 @@ def PeakPicking():
             np.savetxt(name[0] + '_peaks.txt',bands_new, delimiter = '\t')
             
     fig.canvas.mpl_connect('pick_event', onpick)
-    myPSDgui.destroy() #Something with tkinter and matplotlib does not work out quite well so the GUI has to be closed automatically (If not you have to close it by yourself!)
+    PSD_GUI.destroy() #Something with tkinter and matplotlib does not work out quite well so the GUI has to be closed automatically (If not you have to close it by yourself!)
     return
 
 def Show_Peaks():
@@ -222,7 +245,7 @@ def Show_Peaks():
     for ii in np.arange(0,len(peaks)):
         ymin,ymax = plt.gca().get_ylim()
         plt.plot([peaks[ii],peaks[ii]],[ymin,ymax],'r', linewidth = 0.5)
-    myPSDgui.destroy() #Something with tkinter and matplotlib does not work out quite well so the GUI has to be closed automatically (If not you have to close it by yourself!)
+    PSD_GUI.destroy() #Something with tkinter and matplotlib does not work out quite well so the GUI has to be closed automatically (If not you have to close it by yourself!)
     return
 
 def in_phase_angle():
@@ -236,7 +259,7 @@ def in_phase_angle():
     text = 'Path of your peaks'
     name_peaks = myFileOpen(text)
     peak_pos = np.genfromtxt(r''+name_peaks, delimiter="\n")
-    peak_pos = peak_pos[::-1] #Needs to be inverted otherwise it is the wrong way around!
+#    peak_pos = peak_pos[::-1] #Needs to be inverted otherwise it is the wrong way around!
     
     '''Compares every value in peak_pos with the wavenumbers from psd_spectra
     and the closest value is taken'''
@@ -250,7 +273,7 @@ def in_phase_angle():
     text = 'Path of your time values'
     name_t = myFileOpen(text)
     t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
-    n_sp = int(myEntry01.get())
+    n_sp = int(Entry_n_sp.get())
     tges = t_inp[n_sp-1,0]
     
     #Separate the rows belonging to the chosen peak positions 
@@ -273,8 +296,8 @@ def in_phase_angle():
     output = pd.DataFrame({'Wavenumber': peak_pos, 'Phi_max / °': Wmax, 't / s with t_Per. = ' + str(tges) + ' s': tmax})
     
     #Save dataframe
-    text = 'Sollen die peak_pos mit den in-Phase-Winkeln als .txt gespeichert werden?' #Speicherabfrage
-    name = name_psd.split('.') #Wird beim Speichern als Dateiname verwendet
+    text = 'Shall peak positions and in phase angles be saved as .txt?'
+    name = name_psd.split('.') #will be used as filename in case of saving
     name = name[0] + '_peaks_iPW.txt'
     yesno(name, output, text)
   
@@ -291,7 +314,7 @@ def Show_Graph(): #Plots any graph you want
     #Check if legend and labels make sense in your case
     phi = np.arange(0,361,30)
     plt.xlabel(r'$\tilde{\nu}$ / cm$^{-1}$')
-    plt.ylim(-np.amax(psd[:,1:]), np.amax(psd[:,1:]))
+    plt.ylim(np.amin(psd[:,1:]), np.amax(psd[:,1:]))
     
     plt.legend(phi, title = '$\phi^\mathrm{PSD}$ / °', loc = 'upper right')
 
@@ -302,8 +325,8 @@ def Show_Graph(): #Plots any graph you want
 
 def course():
     #Input: time resolved specta, time values, peak positions
-    n_sp = int(myEntry01.get()) #Number of spectra per period
-    cutoff_per = int(myEntry02.get()) #Number of periods to cut off
+    n_sp = int(Entry_n_sp.get()) #Number of spectra per period
+    cutoff_per = int(Entry_cutoff_per.get()) #Number of periods to cut off
     cutoff_sp = n_sp*cutoff_per #Calculated number of spectra to cut off
     
     text = 'Path of your catalyst spectra'
@@ -369,59 +392,57 @@ GUI stuff
 _______________________________________________________________________________
 '''
 
-myPSDgui = Tk()
-myEntry01 = StringVar()
-myEntry02 = StringVar()
-myEntry03 = StringVar()
+PSD_GUI = Tk()
+Entry_n_sp = StringVar()
+Entry_cutoff_per = StringVar()
+Entry_dphi = StringVar()
 
-#myPSDgui.geometry('400x200+200+100')
+PSD_GUI.title('Have fun with PSD!')
 
-myPSDgui.title('Have fun with PSD!')
+Label_n_sp = Label(PSD_GUI, text = 'Type in the number of spectra per period!').pack()
 
-myLabel01 = Label(myPSDgui, text = 'Type in the number of spectra per period!').pack()
+Entry_n_sp = Entry(PSD_GUI, textvariable = Entry_n_sp)
+Entry_n_sp.insert(END,'40')
+Entry_n_sp.pack() #.pack()needs to be in every new line defining an entry field otherwise the output is 'None'
 
-myEntry01 = Entry(myPSDgui, textvariable = myEntry01)
-myEntry01.insert(END,'40')
-myEntry01.pack() #.pack()needs to be in every new line defining an entry field otherwise the output is 'None'
+Label_cutoff_per = Label(PSD_GUI, text = 'Choose the number of periods to cut off!').pack()
 
-myLabel02 = Label(myPSDgui, text = 'Choose the number of periods to cut off!').pack()
+Entry_cutoff_per = Entry(PSD_GUI, textvariable = Entry_cutoff_per)
+Entry_cutoff_per.insert(END,'0')
+Entry_cutoff_per.pack()
 
-myEntry02 = Entry(myPSDgui, textvariable = myEntry02)
-myEntry02.insert(END,'0')
-myEntry02.pack()
+Label_dphi = Label(PSD_GUI, text = 'Choose your phase resolution!').pack()
 
-myLabel03 = Label(myPSDgui, text = 'Choose your phase resolution!').pack()
-
-myEntry03 = Entry(myPSDgui, textvariable = myEntry03)
-myEntry03.insert(END,'30')
-myEntry03.pack()
+Entry_dphi = Entry(PSD_GUI, textvariable = Entry_dphi)
+Entry_dphi.insert(END,'30')
+Entry_dphi.pack()
 
 
-myButton01 = Button(myPSDgui, text = 'TRS -> PSD', command = PSD_calc).pack()
+Bt_PSD_calc = Button(PSD_GUI, text = 'TRS -> PSD', command = PSD_calc).pack()
 
-myLabel04 = Label(myPSDgui, text = 'If no graph is shown, close all tkinter windows except your graph! \n If a data point is clicked on, all data points \n clicked on until now are written into a file:').pack()
+Label_PeakPicking = Label(PSD_GUI, text = 'If no graph is shown, close all tkinter windows except your graph! \n If a data point is clicked on, all data points \n clicked on until now are written into a file:').pack()
 
-myButton02 = Button(myPSDgui, text = 'peak picking', command = PeakPicking).pack()
+Bt_PeakPicking = Button(PSD_GUI, text = 'peak picking', command = PeakPicking).pack()
 
-myLabel05 = Label(myPSDgui, text = 'Here you calculate difference spectra:').pack()
+Label_Spectra_diff = Label(PSD_GUI, text = 'Here you calculate difference spectra:').pack()
 
-myButton03 = Button(myPSDgui, text = 'difference spectra', command = Spectra_diff).pack()
+Bt_Spectra_diff = Button(PSD_GUI, text = 'difference spectra', command = Spectra_diff).pack()
 
-myLabel06 = Label(myPSDgui, text = 'here you can highlight chosen peak positions:').pack()
+Label_Show_Peaks = Label(PSD_GUI, text = 'here you can highlight chosen peak positions:').pack()
 
-myButton04 = Button(myPSDgui, text = 'show peaks', command = Show_Peaks).pack()
+Bt_Show_Peaks = Button(PSD_GUI, text = 'show peaks', command = Show_Peaks).pack()
 
-myLabel07 = Label(myPSDgui, text = 'Calculate in phase angle and in phase time:').pack()
+Label_in_phase_angle = Label(PSD_GUI, text = 'Calculate in phase angle and in phase time:').pack()
 
-myButton05 = Button(myPSDgui, text = 'in phase angle', command = in_phase_angle).pack()
+Bt_in_phase_angle = Button(PSD_GUI, text = 'in phase angle', command = in_phase_angle).pack()
 
-myLabel08 = Label(myPSDgui, text = 'Plot graphs you like:').pack()
+Label_Show_Graph = Label(PSD_GUI, text = 'Plot graphs you like:').pack()
 
-myButton06 = Button(myPSDgui, text = 'show graph', command = Show_Graph).pack()
+Bt_Show_Graph = Button(PSD_GUI, text = 'show graph', command = Show_Graph).pack()
 
-myLabel09 = Label(myPSDgui, text = 'Create courseplots of chosen spectra at chosen peak positions:').pack()
+Label_course = Label(PSD_GUI, text = 'Create courseplots of chosen spectra at chosen peak positions:').pack()
 
-myButton07 = Button(myPSDgui, text = 'courseplot', command = course).pack()
+Bt_course = Button(PSD_GUI, text = 'courseplot', command = course).pack()
 
 
-myPSDgui.mainloop()
+PSD_GUI.mainloop()
