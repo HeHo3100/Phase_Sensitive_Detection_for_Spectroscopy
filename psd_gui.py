@@ -273,6 +273,11 @@ def in_phase_angle():
     text = 'Path of your time values'
     name_t = myFileOpen(text)
     t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
+    
+    #If t_inp is 1D array convert to 2D array for proper indexing
+    if t_inp.ndim == 1:
+        t_inp = np.reshape(t_inp,(t_inp.size,1))
+        
     n_sp = int(Entry_n_sp.get())
     tges = t_inp[n_sp-1,0]
     
@@ -333,7 +338,7 @@ def course():
     name_dataCat = myFileOpen(text)
     
     name_t = name_dataCat.split('.')
-    name_t = name_t[0] + '_t.dpt'
+    name_t = name_t[0] + '_t.' + name_t[1]
     
     text = 'Path of your reference spectra'
     name_dataRef = myFileOpen(text)
@@ -345,6 +350,10 @@ def course():
     dataCat = np.genfromtxt(r''+name_dataCat, delimiter="\t")
     t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
     peaks = np.genfromtxt(r''+name_peaks, delimiter="\n")
+    
+    #If t_inp is 1D array convert to 2D array for proper indexing
+    if t_inp.ndim == 1:
+        t_inp = np.reshape(t_inp,(t_inp.size,1))
     
     if name_dataRef!= '': #If no reference data is given then skip it
         dataRef = np.genfromtxt(r''+name_dataRef, delimiter="\t")
