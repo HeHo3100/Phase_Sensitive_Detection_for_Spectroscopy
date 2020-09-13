@@ -24,9 +24,16 @@ one modulation period to process your data correctly (first textbox of the GUI)!
 modulation periods from the beginning are cut of. The third textbox lets you type in the desired phase resolution of your
 Output spectra in °.
 ###### Input needed:
-RawData.txt, ReferenceData.txt of the same size (only if you want to process modulated difference spectra, otherwise press Esc) and time values as a file with the same name as the raw data with the addition of _t ('FilenameOfYourRawData_t.txt') which contains temporal data as acolumn vector.
+RawData.txt, ReferenceData.txt of the same size (only if you want to process modulated difference spectra, otherwise press Esc), time values as a file with the same name as the raw data with the addition of _t ('FilenameOfYourRawData_t.txt') which contains temporal data as acolumn vector, correct 'number of spectra per period' in first textbox
 ###### Output:
 FilenameOfYourRawData_PSD.txt
+  
+#### difference spectra:
+Import two data sets of the same size which contain spectra of your choice and calculate their difference (Spectrum1-Spectrum2)
+###### Input needed:
+RawData.txt, ReferenceData.txt of the same size
+###### Output:
+FilenameOfYourRawData_TRS_Spektrum.txt
   
 #### peak picking:
 Imports a spectrum of your choice in which you can click on points of your choice in the spectrum to save all chosen
@@ -37,17 +44,9 @@ RawData.txt or ProcessedData.txt (any kind of spectrum suffices)
 ###### Output:
 FilenameOfYourRawData_Banden.txt
   
-#### difference spectra:
-Import two data sets of the same size which contain spectra of your choice and calculate their difference (Spectrum1-Spectrum2)
-###### Input needed:
-RawData.txt, ReferenceData.txt of the same size
-###### Output:
-FilenameOfYourRawData_TRS_Spektrum.txt
-  
-  
 #### show peaks:
 Import a data set with energy/frequency/wavenumber/wavelength values (which you may create e. g. via the button 'peak
-picking') and highlight these positions in your latest window as red vertical lines.
+picking') and highlight these positions in your latest matplotlib window as red vertical lines.
 ###### Input needed:
 AnyData.txt, AnyData_Banden.txt
 ###### Output:
@@ -58,7 +57,7 @@ Import a data set of PSD spectra, peak positions of your choice and the temporal
 spectra to determine for every band at which phase angle it has its maximum value. Temporal data and a correct input in the
 first textbox (number of spectra per period) is needed to calculate time values out of the maximum phase angles.
 ###### Input needed:
-PSDData.txt, AnyData_Banden.txt, RawData_t.txt
+PSDData.txt, AnyData_Banden.txt, RawData_t.txt, correct 'number of spectra per period' in first textbox
 ###### Output:
 PSDData_Banden_iPW.txt
   
@@ -68,11 +67,20 @@ Plots a data set of your choice.
 AnyData.txt
 ###### Output:
 None
-  
-#### courseplot:
-Plots the temporal course of bands of your choice from your time resolved data.
+
+#### contour plot:
+Plots the temporal course of one whole phase resolved spectra set and links the appearance of bands with the time of one period.
+Thus the correct time vector of your raw data is needed as an ascii file as well as the correct 'number of spectra per period'
+as input for the first textbox
 ###### Input needed:
-RawData.txt, ReferenceData.txt of the same size (only if you want to process modulated difference spectra, otherwise press Esc), time values as a file with the same name as the raw data with the addition of _t ('FilenameOfYourRawData_t.txt') which contains temporal data as acolumn vector and AnyData_Banden.txt
+PSDData.txt, time values of your raw data (e. g. 'FilenameOfYourRawData_t.txt') which contains temporal data as acolumn vector, correct 'number of spectra per period' in first textbox
+###### Output:
+None
+  
+#### course plot:
+Plots the temporal course of bands of your choice from your time resolved data in 2D I vs t diagram.
+###### Input needed:
+RawData.txt, ReferenceData.txt of the same size (only if you want to process modulated difference spectra, otherwise press Esc), time values as a file with the same name as the raw data with the addition of _t ('FilenameOfYourRawData_t.txt') which contains temporal data as acolumn vector and AnyData_Banden.txt, 
 ###### Output:
 None
 
