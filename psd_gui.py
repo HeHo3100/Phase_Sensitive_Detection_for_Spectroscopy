@@ -15,6 +15,8 @@ other.
 
 @author: jakob.weyel@tu-darmstadt.de
 """
+
+import os
 import time
 
 from tkinter import *
@@ -26,7 +28,11 @@ from scipy import integrate as igr
 import matplotlib.pyplot as plt
 import pandas as pd
 
-plt.style.use(r"C:\Users\Haase-Gast\HESSENBOX-DA\Kram\TU_Design.mplstyle")
+if os.environ['USERNAME'] == 'admin' :
+    plt.style.use(r"C:\Users\admin\HESSENBOX-DA\Diverses\TU_Design.mplstyle")
+
+elif os.environ['USERNAME'] == 'Haase-Gast' :
+    plt.style.use(r"E:\HESSENBOX-DA\Diverses\TU_Design.mplstyle")
 
 '''
 _______________________________________________________________________________
@@ -59,46 +65,6 @@ functions
 _______________________________________________________________________________
 '''
 
-def Spectra_diff():
-    #Loads number of spectra per period from textbox 'Entry_n_sp'
-    text = 'Path of your catalyst spectra'
-    name_dataCat = myFileOpen(text)
-    
-    text = 'Path of your reference spectra'
-    name_dataRef = myFileOpen(text)
-    
-    #Data of catalyst spectra and reference spectra
-    dataCat = np.genfromtxt(r''+name_dataCat, delimiter="\t")
-    dataRef = np.genfromtxt(r''+name_dataRef, delimiter="\t")
-    
-    #Calculating the difference for gas phase subtraction or whatever you want
-    data = dataCat-dataRef
-    data[:,0] = dataCat[:,0]
-    
-    #plots the difference spectra
-    plt.figure()
-    plt.xlabel(r'$\tilde{\nu}$ / cm$^{-1}$')
-    plt.ylabel('Int.')
-    
-    plt.plot(data[:,0],data[:,1:], linewidth = 0.1)
-    
-    plt.ylim(-np.amax(data[:,1:]), np.amax(data[:,1:]))
-    
-    #Put difference spectra into data frame
-    diff = ['diff ' + str(i) for i in range(1,len(data[0,:]))]
-    
-    header = ['Wavenumber'] + diff
-    output = pd.DataFrame(data = data[:,:], columns = header)
-    
-    #Save data frame to a file?
-    
-    text = 'Shall the difference spectra be saved as .txt?'
-    name = name_dataCat.split('.') #Will be used as filename
-    name = name[0] + '_diff_spectra.txt'
-    yesno(name, output, text)
-
-    return
-    
 def PSD_calc(): #Calculates PSD spectra
     #Number of spectra per period, periods to cut off, phase resolution and the path are input via the GUI
     start = time.time()
@@ -114,7 +80,7 @@ def PSD_calc(): #Calculates PSD spectra
     name_t = name_dataCat.split('.')
     name_t = name_t[0] + '_t.' + name_t[1]
     
-    text = 'DatPath of your reference spectra'    
+    text = 'Path of your reference spectra'    
     name_dataRef = myFileOpen(text)
     
     #Data of catalyst spectra and reference spectra
@@ -156,6 +122,10 @@ def PSD_calc(): #Calculates PSD spectra
         
     data = np.concatenate((Energy_values, sum_spectra_per),axis = 1) # Concatenate Energy_values and averaged spectra back into 'data'
     ''''''
+    i = 0
+    for row in data:
+        data[i,1:] = data[i,1:]-np.mean(data[i,1:])
+        i = i+1
         
     #Definition of values for the fourier transformation
     # '''    k = 1 #set k>1 for modeling a rectangular function via fourier synthesis which will be folded with the time resolved spectra'''
@@ -170,14 +140,22 @@ def PSD_calc(): #Calculates PSD spectra
     for k in np.arange(1,2): #set k>1 for modeling a rectangular function via fourier synthesis which will be folded with the time resolved spectra
         for i in range(1,len(phi)+1):
             for j in range(0,len(data[:,0])):
-                dummy[j,i] = igr.trapz(data[j,1:]*(1/(2*k))*np.sin((2*k-1)*omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360))
+                dummy[j,i] = 2/t_inp[int(n_sp),0]*igr.trapz(data[j,1:]*(1/(2*k))*np.sin((2*k-1)*omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360))
     spectra[:,1:] = spectra[:,1:]+dummy[:,1:]
     
     #Plot spectra
-    plt.figure()
-    for i in range(1,len(phi)+1):
+    # plt.figure()
+    # for i in range(1,len(phi)+1):
     
-        plt.plot(spectra[:,0],spectra[:,1:],label = str(phi[i-1]))
+    #     plt.plot(spectra[:,0],spectra[:,1:],label = str(phi[i-1]))
+    
+    # plt.ylim(-np.amax(spectra[:,1:]), np.amax(spectra[:,1:]))
+    
+    # plt.xlabel(xUnit_list[xUnit.get()]) #Gets x axis label
+    # plt.ylabel(yUnit_list[yUnit.get()]) #Gets y axis label
+    
+    #add legend
+    # plt.legend(phi, title = r'$\phi$ / °', loc = 'upper right')
         
     #Put PSD spectra into data frame
     phi_str = [str(item) + '°' for item in phi]
@@ -185,23 +163,55 @@ def PSD_calc(): #Calculates PSD spectra
     header = ['Wavenumber'] + phi_str
     output = pd.DataFrame(data = spectra[:,:], columns = header)
     
-    plt.ylim(-np.amax(spectra[:,1:]), np.amax(spectra[:,1:]))
-    
-    plt.xlabel(r'$\tilde{\nu}$ / cm$^{-1}$')
-    plt.ylabel(r'-lg($R$)')
-    
-    #add legend
-    plt.legend(phi, title = r'$\phi^\mathrm{PSD}$ / °', loc = 'upper right')
-    
     end = time.time()
     
     #Save the PSD spectra
     
     text = 'Shall the PSD spectra be saved as .txt?'
-    name = name_dataCat.split('.') #Wird beim Speichern als Dateiname verwendet
-    name = name[0] + '_PSD_spectra_' + str(cutoff_per) + '_Perioden_raus_' + str(dphi) + '_dphi.txt'
+    name = name_dataCat.split('.')
+    name = name[0] + '_PSD_spectra_' + str(cutoff_per) + '_periods_cutoff_' + str(dphi) + '_dphi.txt'
     yesno(name, output, text)
     print('Runtime PSD: ' + str(end-start) +' s.')
+
+    return
+
+def Spectra_diff():
+    #Loads number of spectra per period from textbox 'Entry_n_sp'
+    text = 'Path of your catalyst spectra'
+    name_dataCat = myFileOpen(text)
+    
+    text = 'Path of your reference spectra'
+    name_dataRef = myFileOpen(text)
+    
+    #Data of catalyst spectra and reference spectra
+    dataCat = np.genfromtxt(r''+name_dataCat, delimiter="\t")
+    dataRef = np.genfromtxt(r''+name_dataRef, delimiter="\t")
+    
+    #Calculating the difference for gas phase subtraction or whatever you want
+    data = dataCat-dataRef
+    data[:,0] = dataCat[:,0]
+    
+    #plots the difference spectra
+    plt.figure()
+    plt.xlabel(xUnit_list[yUnit.get()]) #Gets x axis label
+    plt.ylabel(yUnit_list[yUnit.get()]) #Gets y axis label
+    
+    plt.plot(data[:,0],data[:,1:], linewidth = 0.1)
+    
+    plt.ylim(-np.amax(data[:,1:]), np.amax(data[:,1:]))
+    
+    #Put difference spectra into data frame
+    diff = ['diff ' + str(i) for i in range(1,len(data[0,:]))]
+    
+    header = ['Wavenumber'] + diff
+    output = pd.DataFrame(data = data[:,:], columns = header)
+    
+    #Save data frame to a file?
+    
+    text = 'Shall the difference spectra be saved as .txt?'
+    name = name_dataCat.split('.') #Will be used as filename
+    name = name[0] + '_diff_spectra.txt'
+    yesno(name, output, text)
 
     return
 
@@ -212,7 +222,8 @@ def PeakPicking():
     psd = np.genfromtxt(r''+name_psd, delimiter="\t", skip_header=1)
     #Plot all spectra at once
     plt.clf()
-    plt.xlabel(r'$\tilde{\nu}$ / cm$^{-1}$')
+    plt.xlabel(xUnit_list[xUnit.get()]) #Gets x axis label
+    plt.ylabel(yUnit_list[yUnit.get()]) #Gets y axis label
     
     for i in range(1, psd.shape[1]-1):
         plt.plot(psd[0:,0],psd[0:,i], 'o', picker = 3)
@@ -309,23 +320,66 @@ def in_phase_angle():
 def Show_Graph(): #Plots any graph you want
     text = 'Path of your spectra'
     name_psd = myFileOpen(text)
-    psd = np.genfromtxt(r''+name_psd, delimiter="\t", skip_header=1)
+    psd = np.genfromtxt(r''+name_psd, skip_header=1)
     
     #Plot all spectra at once
     plt.figure()
     
+    # plt.plot(psd[:,0],psd[:,121:142:2]) # takes one period out of TR spectra and plots only 11 of them (more looks crowded)
+    # plt.plot(psd[:,0],psd[:,241:322:8]) # takes one period out of TR spectra and plots only 11 of them (more looks crowded)
+    # plt.plot(psd[:,0],psd[:,1201:1442:22]) # takes one period out of TR spectra and plots only 11 of them (more looks crowded)
     plt.plot(psd[:,0],psd[:,1:])
     
     #Check if legend and labels make sense in your case
-    phi = np.arange(0,361,30)
-    plt.xlabel(r'$\tilde{\nu}$ / cm$^{-1}$')
-    plt.ylim(np.amin(psd[:,1:]), np.amax(psd[:,1:]))
+    phi = np.arange(0,360,30)
+    plt.xlabel(xUnit_list[xUnit.get()]) #Gets x axis label
+    plt.ylabel(yUnit_list[yUnit.get()]) #Gets y axis label
     
-    plt.legend(phi, title = '$\phi^\mathrm{PSD}$ / °', loc = 'upper right')
+    # plt.yticks([],[])
+    plt.ylim(np.amin(psd[:,1:]), np.amax(psd[:,1:]))
+    plt.xlim(np.amin(psd[:,0]), np.amax(psd[:,0]))
+    
+    # plt.legend(phi, title = '$\phi$ / °', loc = 'upper right')    
 
-#    plt.yticks([],[])
-    plt.ylabel('-lg($R$)')
+    return
 
+def Contour_Plot():
+    
+    text = 'Path of your PSD spectra'
+    name_psd = myFileOpen(text)    
+    psd_spectra = np.genfromtxt(r''+name_psd)
+    
+    text = 'Path of your time values'
+    name_t = myFileOpen(text)
+    t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
+    
+    #If t_inp is 1D array convert to 2D array for proper indexing
+    if t_inp.ndim == 1:
+        t_inp = np.reshape(t_inp,(t_inp.size,1))
+    
+    wavenumber = psd_spectra[1:,0] # all wavenumbers
+    
+    spec = psd_spectra[1:,1:] # all intensities
+
+    spec = spec[:,::-1] # inverse for correct spectrum-time relation
+    
+    n_sp = int(Entry_n_sp.get()) # number of spectra per period
+    
+    t_per = t_inp[n_sp-1,0] # period length
+    
+    t = np.linspace(0,t_per, spec.shape[1]) # time vector
+    
+    WN, T = np.meshgrid(wavenumber, t) # create 2D grid
+    
+    # plot stuff
+    
+    plt.figure()
+    
+    plt.contourf(WN, T, spec.T, 1000, cmap = 'seismic')
+    
+    plt.xlabel(r'$\tilde{\nu}$ / cm$^{-1}$')
+    plt.ylabel(r'$t$ / s')
+    
     return
 
 def course():
@@ -393,8 +447,8 @@ def course():
         plt.plot(t_inp[:,0]/60,data[int(pos[i]),1:], label = str(np.around(peaks[i],1)))
         plt.legend(title = r'$\tilde{\nu}$ / cm$^{-1}$')
         plt.xlabel('$t$ / min')
-        plt.ylabel('-lg($R$)')
-    
+        plt.ylabel(yUnit_list[yUnit.get()]) #Gets y axis label
+        
 '''
 _______________________________________________________________________________
 GUI stuff
@@ -426,6 +480,24 @@ Entry_dphi = Entry(PSD_GUI, textvariable = Entry_dphi)
 Entry_dphi.insert(END,'30')
 Entry_dphi.pack()
 
+Label_DD_yUnit = Label(PSD_GUI, text = 'Choose your y label!').pack()
+
+yUnit_list = {'-lg(R)': r'-lg($R$)', 'Extinction': r'$E$', 'Transmission in %': r'$T$ / %', 'Absorption in %': r'$A$ / %', 'Intensity in a.U.': r'$I$ / a.U.'}
+yUnit = StringVar(PSD_GUI)
+yUnit.set('-lg(R)')
+DD_yUnit = OptionMenu(PSD_GUI, yUnit, *yUnit_list)
+DD_yUnit.config(width=14)
+DD_yUnit.pack()
+
+Label_DD_yUnit = Label(PSD_GUI, text = 'Choose your x label!').pack()
+
+xUnit_list = {'Wavenumber in 1/cm': r'$\tilde{\nu}$ / cm$^{-1}$', 'Energy in eV': r'$E$ / eV', 'Wavelength in nm': r'$\lambda$ / nm', 'Raman Shift in 1/cm': r'$\Delta\tilde{\nu}$ / cm$^{-1}$'}
+xUnit = StringVar(PSD_GUI)
+xUnit.set('Wavenumber in 1/cm')
+DD_xUnit = OptionMenu(PSD_GUI, xUnit, *xUnit_list)
+DD_xUnit.config(width=22)
+DD_xUnit.pack()
+
 
 Bt_PSD_calc = Button(PSD_GUI, text = 'TRS -> PSD', command = PSD_calc).pack()
 
@@ -449,9 +521,14 @@ Label_Show_Graph = Label(PSD_GUI, text = 'Plot graphs you like:').pack()
 
 Bt_Show_Graph = Button(PSD_GUI, text = 'show graph', command = Show_Graph).pack()
 
+Label_Contour_Plot = Label(PSD_GUI, text = 'Create contour plot from PSD spectra:').pack()
+
+Bt_Contour_Plot = Button(PSD_GUI, text = 'contour plot', command = Contour_Plot).pack()
+
 Label_course = Label(PSD_GUI, text = 'Create courseplots of chosen spectra at chosen peak positions:').pack()
 
 Bt_course = Button(PSD_GUI, text = 'courseplot', command = course).pack()
+
 
 
 PSD_GUI.mainloop()
