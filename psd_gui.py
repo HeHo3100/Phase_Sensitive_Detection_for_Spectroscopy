@@ -8,11 +8,6 @@ k as you like) in PSD_calc instead of a simple sin function to describe the
 periodic stimulation which is part of the convolution in the fourier
 transformation.
 
-Take notice that the GUI closes automatically when using PeakPicking and
-Show_Peaks, sometimes you have to do this by hand. I have not yet figured out
-how to solve this problem, somehow tkinter and matplotlib interfere with each
-other.
-
 @author: jakob.weyel@tu-darmstadt.de
 """
 
