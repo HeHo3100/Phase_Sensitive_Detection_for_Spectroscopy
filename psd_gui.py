@@ -3,8 +3,11 @@
 Created on Mon May 13 09:15:18 2019 by Jakob Weyel, Eduard-Zintl-Institut für
 Anorganische und Physikalische Chemie, TU Darmstadt
 
+Make sure that your graphics backend is set to 'Tkinter' for functions such as
+'PeakPicking' and 'Show_Peaks'.
+
 If want, you can include a fourier series of your choice (change the parameter
-k as you like) in PSD_calc instead of a simple sin function to describe the
+k as you like) in 'PSD_calc' instead of a simple sin function to describe the
 periodic stimulation which is part of the convolution in the fourier
 transformation.
 
@@ -23,13 +26,9 @@ from scipy import integrate as igr
 import matplotlib.pyplot as plt
 import pandas as pd
 
-# The following lines import stylesheets to format graphs. If you don't have any, don't worry
-
-if os.environ['LOGNAME'] == 'jakub' :
-    plt.style.use(r'/home/jakub/HESSENBOX-DA/Diverses/TU_Design.mplstyle')
-
-elif os.environ['LOGNAME'] == 'jakubuni' :
-    plt.style.use(r"/home/jakubuni/Desktop/HESSENBOX-DA/Diverses/TU_Design.mplstyle")
+# The following two lines import stylesheets to format graphs. If you don't have any, comment them out
+# if os.environ['LOGNAME'] == 'jakub' :
+#     plt.style.use('/home/jakub/HESSENBOX-DA/Diverses/TU_Design.mplstyle')
 
 '''
 _______________________________________________________________________________
@@ -137,17 +136,12 @@ def PSD_calc(): # Calculates PSD spectra
     spectra[:,0] = dataCat[:,0]
     dummy = spectra
     
-    # # Gedoensigkeit
-    # Tper = 2/t_inp[int(n_sp),0]
-    # factor = 2*np.pi/360
-    # OTper = omega*t_inp[0:n_sp,0]
-    
     # Do the fourier transformation for all predefined values of phi
-    for k in np.arange(1,2): # set k>1 for modeling a rectangular function via fourier synthesis which will be folded with the time resolved spectra
+    for k in np.arange(1,8): # set k>1 for modeling a rectangular function via fourier synthesis which will be folded with the time resolved spectra
         for i in range(1,len(phi)+1):
             for j in range(0,len(data[:,0])):
                 dummy[j,i] = 2/t_inp[int(n_sp),0]*igr.trapz(data[j,1:]*(1/(2*k))*np.sin((2*k-1)*omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360))
-                # dummy[j,i] = Tper*igr.trapz(data[j,1:]*(1/(2*k))*np.sin((2*k-1)*OTper+phi[i-1]*factor))
+                
     spectra[:,1:] = spectra[:,1:]+dummy[:,1:]
     
     # Plot spectra (if needed, uncomment it)
@@ -362,7 +356,7 @@ def contour():
     
     text = 'Path of your PSD spectra'
     name_psd = FileOpen(text)
-    psd_spectra = pd.read_csv(r''+name_psd)
+    psd_spectra = pd.read_csv(r''+name_psd, sep='\t')
     psd_spectra = psd_spectra.values
     
     text = 'Path of your time values'
