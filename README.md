@@ -1,5 +1,3 @@
-modulation periods from the beginning are cut off. The third textbox lets you type in the desired phase resolution of your
-
 https://doi.org/10.5281/zenodo.3613876
 
 A GUI with multiple features that executes Phase Sensitive Detection in Modulation Excitation Spectroscopy to get from time

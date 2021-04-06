@@ -3,8 +3,11 @@
 Created on Mon May 13 09:15:18 2019 by Jakob Weyel, Eduard-Zintl-Institut für
 Anorganische und Physikalische Chemie, TU Darmstadt
 
+Make sure that your graphics backend is set to 'Tkinter' for functions such as
+'PeakPicking' and 'Show_Peaks'.
+
 If want, you can include a fourier series of your choice (change the parameter
-k as you like) in PSD_calc instead of a simple sin function to describe the
+k as you like) in 'PSD_calc' instead of a simple sin function to describe the
 periodic stimulation which is part of the convolution in the fourier
 transformation.
 
@@ -13,6 +16,7 @@ transformation.
 
 import os
 import time
+import re
 
 from tkinter import *
 from tkinter import messagebox
@@ -23,13 +27,9 @@ from scipy import integrate as igr
 import matplotlib.pyplot as plt
 import pandas as pd
 
-# The following lines import stylesheets to format graphs. If you don't have any, don't worry
-
+# The following two lines import stylesheets to format graphs. If you don't have any, comment them out
 if os.environ['LOGNAME'] == 'jakub' :
-    plt.style.use(r'/home/jakub/HESSENBOX-DA/Diverses/TU_Design.mplstyle')
-
-elif os.environ['LOGNAME'] == 'jakubuni' :
-    plt.style.use(r"/home/jakubuni/Desktop/HESSENBOX-DA/Diverses/TU_Design.mplstyle")
+    plt.style.use('/home/jakub/HESSENBOX-DA/Diverses/TU_Design.mplstyle')
 
 '''
 _______________________________________________________________________________
@@ -137,17 +137,12 @@ def PSD_calc(): # Calculates PSD spectra
     spectra[:,0] = dataCat[:,0]
     dummy = spectra
     
-    # # Gedoensigkeit
-    # Tper = 2/t_inp[int(n_sp),0]
-    # factor = 2*np.pi/360
-    # OTper = omega*t_inp[0:n_sp,0]
-    
     # Do the fourier transformation for all predefined values of phi
     for k in np.arange(1,2): # set k>1 for modeling a rectangular function via fourier synthesis which will be folded with the time resolved spectra
         for i in range(1,len(phi)+1):
             for j in range(0,len(data[:,0])):
                 dummy[j,i] = 2/t_inp[int(n_sp),0]*igr.trapz(data[j,1:]*(1/(2*k))*np.sin((2*k-1)*omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360))
-                # dummy[j,i] = Tper*igr.trapz(data[j,1:]*(1/(2*k))*np.sin((2*k-1)*OTper+phi[i-1]*factor))
+                
     spectra[:,1:] = spectra[:,1:]+dummy[:,1:]
     
     # Plot spectra (if needed, uncomment it)
@@ -191,10 +186,10 @@ def Spectra_diff():
     name_dataRef = FileOpen(text)
     
     # Data of catalyst spectra and reference spectra
-    dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
+    dataCat = pd.read_csv(r''+name_dataCat, sep="\t") # , header = None) # if dataset got header: comment last argument out (can't compute strings!))
     dataCat = dataCat.values
     
-    dataRef = pd.read_csv(r''+name_dataRef, sep="\t", header = None)
+    dataRef = pd.read_csv(r''+name_dataRef, sep="\t") # , header = None)
     dataRef = dataRef.values
     
     # Calculating the difference for gas phase subtraction or whatever you want
@@ -313,7 +308,11 @@ def in_phase_angle():
     # Read out the phase angle belonging to the respective maximum
     Wmax = phi_at_peaks.idxmax(axis = 1)
     Wmax = np.array(Wmax.values,dtype = str)
-    Wmax = np.core.defchararray.replace(Wmax,'°','')
+
+    numbers = re.compile(r'\d+(?:\.\d+)?') # define that only characters important for decimals are kept
+    Wmax = np.array( [numbers.findall(item) for item in Wmax] ).reshape(-1) # finds only numbers and dots and puts them into the array
+
+    # Wmax = np.core.defchararray.replace(Wmax,'°','')
     Wmax = np.array(Wmax,dtype = int)
     
     # Convert phase angle at maximum into time at maximum
@@ -340,6 +339,7 @@ def Show_Graph(): # Plots any graph you want
     # Plot all spectra at once
     plt.figure()
     
+    
     # plt.plot(psd[:,0],psd[:,121:142:2]) # takes one period out of TR spectra and plots only 11 of them (more looks crowded)
     # plt.plot(psd[:,0],psd[:,241:322:8]) # takes one period out of TR spectra and plots only 11 of them (more looks crowded)
     # plt.plot(psd[:,0],psd[:,1201:1442:22]) # takes one period out of TR spectra and plots only 11 of them (more looks crowded)
@@ -362,7 +362,7 @@ def contour():
     
     text = 'Path of your PSD spectra'
     name_psd = FileOpen(text)
-    psd_spectra = pd.read_csv(r''+name_psd)
+    psd_spectra = pd.read_csv(r''+name_psd, sep='\t')
     psd_spectra = psd_spectra.values
     
     text = 'Path of your time values'
@@ -391,9 +391,9 @@ def contour():
     
     plt.figure()
     
-    plt.contourf(WN, T, -spec.T, 100, cmap = 'PRGn')
+    plt.contourf(WN, T, -spec.T, 100, cmap = 'gist_heat')
     
-    plt.xlabel(r'$\tilde{\nu}$ / cm$^{-1}$')
+    plt.xlabel(xUnit_list[xUnit.get()])
     plt.ylabel(r'$t_\mathrm{\varphi}$ / s')
     
     return
@@ -452,20 +452,35 @@ def course():
     # Plot the course
     pos = np.zeros(len(peaks))
     for i in np.arange(0,len(peaks)):
-        if i%10 == 0: # opens a new plot window every ten lines. Otherwise the colours get confusing
+        if i%15 == 0: # opens a new plot window every XXX lines (insert number of your choice). Otherwise the colours get confusing
             # Highlight the different phases of your periodic stimulation
-            plt.figure()#figsize=(10,6), dpi=80)
-            for j in np.arange(min(t_inp[:,0]),max(t_inp[:,0]/60),n_sp*t_1spectrum/60): #divide by 60 to get from s to min
-                plt.axvspan(j, j+n_sp/2*t_1spectrum/60, facecolor='k', alpha=0.25)
+            plt.figure()
+            if n_sp != 0:
+                for j in np.arange(min(t_inp[:,0]),max(t_inp[:,0]/60),n_sp*t_1spectrum/60): #divide by 60 to get from s to min
+                    plt.axvspan(j, j+n_sp/2*t_1spectrum/60, facecolor='k', alpha=0.25)
         
         dummy = np.where(data[:,0] == peaks[i])
         pos[i] = dummy[0]
         
-        plt.plot(t_inp[:,0]/60,data[int(pos[i]),1:], label = str(np.around(peaks[i],1)))
-        plt.legend(title = r'$\tilde{\nu}$ / cm$^{-1}$')
+        plt.plot(t_inp[:,0]/60,data[int(pos[i]),1:], label = str(np.around(peaks[i],0)))
+        plt.legend(title = xUnit_list[xUnit.get()], loc='upper right')
         plt.xlabel('$t$ / min')
         plt.ylabel(yUnit_list[yUnit.get()]) # Gets y axis label
-        
+   
+    # Write sth. to save output as txt
+    output1 = pd.DataFrame({'t / min': t_inp[:,0]/60})
+    
+    output2=pd.DataFrame(data=data[pos.astype(int),1:].T, columns=np.around(peaks,0).astype(int))
+    
+    output = pd.merge(output1,output2, left_index=True, right_index=True)
+    
+    # Save data frame to a file?
+    
+    text = 'Shall the difference spectra be saved as .txt?'
+    name = name_dataCat.split('.') #Will be used as filename
+    name = name[0] + '_course.txt'
+    yesno(name, output, text)
+            
 '''
 _______________________________________________________________________________
 GUI stuff
