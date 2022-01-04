@@ -279,7 +279,9 @@ def in_phase_angle():
     text = 'Path of your peaks'
     name_peaks = FileOpen(text)
     peak_pos = np.genfromtxt(r''+name_peaks, delimiter="\n")
-    # peak_pos = peak_pos[::-1] #Needs to be inverted otherwise it is the wrong way around!
+    
+    '''rework next line so that sequence of dataset is unimportant!!!'''
+    peak_pos = peak_pos[::-1] #Needs to be inverted otherwise it is the wrong way around!
     
     '''Compares every value in peak_pos with the wavenumbers from psd_spectra
     and the closest value is taken'''
@@ -332,26 +334,32 @@ def in_phase_angle():
   
 def Show_Graph(): # Plots any graph you want
     text = 'Path of your spectra'
-    name_psd = FileOpen(text)
-    psd = pd.read_csv(r''+name_psd, sep="\t")
-    psd = psd.values
+    name_data = FileOpen(text)
+    data = pd.read_csv(r''+name_data, sep="\t")
+    data = data.values
     
     # Plot all spectra at once
     plt.figure()
     
+    # # Averaging all periods into one
+    # n_sp = int(Entry_n_sp.get()) # Number of spectra per period
+    # n_per = 20 # Number of periods
+    # Energy_values = (data[:,0]) # Cache the energy values / wavenumbers
+    # Energy_values = np.reshape(Energy_values,(Energy_values.size,1)) # Make 2D array for further computations
+    # spectra_per = np.split(data[:,1:], n_per, axis = 1) # Split the wholeness of all spectra in 'data' into minor ndarrays for each period
+    # sum_spectra_per = np.divide(sum(spectra_per),n_per) # sum up all cells of the created ndarrays that have the same index and divide by the number of periods
+    # data = np.concatenate((Energy_values, sum_spectra_per[:,::int(n_sp/10)]),axis = 1) # Concatenate Energy_values and every tenth averaged spectra back into 'data'
     
-    # plt.plot(psd[:,0],psd[:,121:142:2]) # takes one period out of TR spectra and plots only 11 of them (more looks crowded)
-    # plt.plot(psd[:,0],psd[:,241:322:8]) # takes one period out of TR spectra and plots only 11 of them (more looks crowded)
-    # plt.plot(psd[:,0],psd[:,1201:1442:22]) # takes one period out of TR spectra and plots only 11 of them (more looks crowded)
-    plt.plot(psd[:,0],psd[:,1:])
+    #plot graph
+    plt.plot(data[:,0],data[:,1:])
     
     # grabs x and y units for graph 
     plt.xlabel(xUnit_list[xUnit.get()]) # Gets x axis label
     plt.ylabel(yUnit_list[yUnit.get()]) # Gets y axis label
     
     # plt.yticks([],[])
-    plt.ylim(np.amin(psd[:,1:]), np.amax(psd[:,1:]))
-    plt.xlim(np.amin(psd[:,0]), np.amax(psd[:,0]))
+    plt.ylim(np.amin(data[:,1:]), np.amax(data[:,1:]))
+    plt.xlim(np.amin(data[:,0]), np.amax(data[:,0]))
     
     # phi = np.arange(0,360,30)
     # plt.legend(phi, title = r'$\varphi$ / °', loc = 'upper right')
@@ -391,7 +399,7 @@ def contour():
     
     plt.figure()
     
-    plt.contourf(WN, T, -spec.T, 100, cmap = 'gist_heat')
+    plt.contourf(WN, T, -spec.T, 100, cmap = 'PRGn')
     
     plt.xlabel(xUnit_list[xUnit.get()])
     plt.ylabel(r'$t_\mathrm{\varphi}$ / s')
