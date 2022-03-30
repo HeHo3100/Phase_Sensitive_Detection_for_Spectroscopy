@@ -276,12 +276,15 @@ def in_phase_angle():
     # Needs to round because pandas uses more decimals than numpy
     psd_spectra.Wavenumber = pd.Series([round(val, 5) for val in psd_spectra.Wavenumber], index = psd_spectra.index)
     
+
+    if psd_spectra['Wavenumber'].iloc[0] > psd_spectra['Wavenumber'].iloc[-1]: # Bring psd_spectra in an ascending order if they are'nt already
+        psd_spectra = psd_spectra.iloc[::-1]
+    
     text = 'Path of your peaks'
     name_peaks = FileOpen(text)
     peak_pos = np.genfromtxt(r''+name_peaks, delimiter="\n")
-    
-    '''rework next line so that sequence of dataset is unimportant!!!'''
-    peak_pos = peak_pos[::-1] #Needs to be inverted otherwise it is the wrong way around!
+
+    peak_pos = np.sort(peak_pos) # sort peaks in ascending order
     
     '''Compares every value in peak_pos with the wavenumbers from psd_spectra
     and the closest value is taken'''
@@ -289,7 +292,7 @@ def in_phase_angle():
     for val in peak_pos:
         peak_pos[i] = min(psd_spectra.Wavenumber, key=lambda x:abs(x-val))
         i = i+1
-        
+    
     # read time values to convert the maximum phase angle into a time value
     
     text = 'Path of your time values'
@@ -349,6 +352,15 @@ def Show_Graph(): # Plots any graph you want
     # spectra_per = np.split(data[:,1:], n_per, axis = 1) # Split the wholeness of all spectra in 'data' into minor ndarrays for each period
     # sum_spectra_per = np.divide(sum(spectra_per),n_per) # sum up all cells of the created ndarrays that have the same index and divide by the number of periods
     # data = np.concatenate((Energy_values, sum_spectra_per[:,::int(n_sp/10)]),axis = 1) # Concatenate Energy_values and every tenth averaged spectra back into 'data'
+    
+    # # Put stuff into data frame
+    # output = pd.DataFrame(data = data[:,:], columns = None)
+    
+    # # Save spectra
+    # text = 'Shall the PSD spectra be saved as .txt?'
+    # name = name_data.split('.')
+    # name = name[0] + '_1period.txt'
+    # yesno(name, output, text)
     
     #plot graph
     plt.plot(data[:,0],data[:,1:])
