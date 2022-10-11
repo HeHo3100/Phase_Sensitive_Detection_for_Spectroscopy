@@ -89,6 +89,8 @@ def PSD_calc(): # Calculates PSD spectra
     # If t_inp is 1D array convert to 2D array for proper indexing
     if t_inp.ndim == 1:
         t_inp = np.reshape(t_inp,(t_inp.size,1))
+        
+    '''Another if clause that transposes row vectors to the desired column ones would be cool'''
     
     if name_dataRef!= '':
         dataRef = pd.read_csv(r''+name_dataRef, sep="\t", header = None)
@@ -131,7 +133,7 @@ def PSD_calc(): # Calculates PSD spectra
         
     # Definition of values for the fourier transformation
     omega = 2*np.pi/t_inp[int(n_sp),0] # omega as 2pi/t_OnePeriod, t_OnePeriod is generated from the number of measurements until the second period begins
-    phi = np.arange(0,361,dphi) # phi is the phase shift which occurs as answer of the system to the external stimulation in the experiment
+    phi = np.arange(0,360,dphi) # phi is the phase shift which occurs as answer of the system to the external stimulation in the experiment
     
     spectra = np.zeros((len(data[:,0]),len(phi)+1))
     spectra[:,0] = dataCat[:,0]
@@ -286,8 +288,7 @@ def in_phase_angle():
 
     peak_pos = np.sort(peak_pos) # sort peaks in ascending order
     
-    '''Compares every value in peak_pos with the wavenumbers from psd_spectra
-    and the closest value is taken'''
+    # Compares every value in peak_pos with the wavenumbers from psd_spectra and the closest value is taken
     i = 0
     for val in peak_pos:
         peak_pos[i] = min(psd_spectra.Wavenumber, key=lambda x:abs(x-val))
@@ -334,7 +335,7 @@ def in_phase_angle():
     name = name_psd.split('.') #will be used as filename in case of saving
     name = name[0] + '_peaks_iPW.txt'
     yesno(name, output, text)
-  
+    
 def Show_Graph(): # Plots any graph you want
     text = 'Path of your spectra'
     name_data = FileOpen(text)
@@ -356,6 +357,8 @@ def Show_Graph(): # Plots any graph you want
     # # Put stuff into data frame
     # output = pd.DataFrame(data = data[:,:], columns = None)
     
+    # print(output)
+    
     # # Save spectra
     # text = 'Shall the PSD spectra be saved as .txt?'
     # name = name_data.split('.')
@@ -374,7 +377,8 @@ def Show_Graph(): # Plots any graph you want
     plt.xlim(np.amin(data[:,0]), np.amax(data[:,0]))
     
     # phi = np.arange(0,360,30)
-    # plt.legend(phi, title = r'$\varphi$ / °', loc = 'upper right')
+    # # plt.legend(phi, title = r'$\varphi$ / °', loc = 'upper right') # legend inside frame
+    # plt.legend(phi, title = r'$\varphi$ / °', loc = 'upper right', bbox_to_anchor=(1.12,1)) # legend outside frame
     
     return
 
@@ -490,7 +494,7 @@ def course():
     # Write sth. to save output as txt
     output1 = pd.DataFrame({'t / min': t_inp[:,0]/60})
     
-    output2=pd.DataFrame(data=data[pos.astype(int),1:].T, columns=np.around(peaks,0).astype(int))
+    output2 = pd.DataFrame(data=data[pos.astype(int),1:].T, columns=np.around(peaks,0).astype(int))
     
     output = pd.merge(output1,output2, left_index=True, right_index=True)
     

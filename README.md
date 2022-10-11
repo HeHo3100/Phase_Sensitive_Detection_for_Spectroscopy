@@ -10,7 +10,7 @@ TU Darmstadt
 
 For further questions feel free to contact me via mail: jakob.weyel@tu-darmstadt.de
 
-For 'plug and play' use install anaconda as your python and use scipy as I do.
+For 'plug and play' use install anaconda as your python and use spyder as I do.
 
 Executing this script opens a GUI with several buttons:
 
@@ -24,7 +24,7 @@ Output spectra in °.
 ###### Input needed:
 RawData.txt, ReferenceData.txt of the same size (only if you want to process modulated difference spectra, otherwise press Esc),
 time values as a file with the same name as the raw data with the addition of _t ('FilenameOfYourRawData_t.txt') which contains
-temporal data as acolumn vector, correct 'number of spectra per period' in first textbox
+temporal data as a column vector, correct 'number of spectra per period' in first textbox
 ###### Output:
 FilenameOfYourRawData_PSD.txt
   
