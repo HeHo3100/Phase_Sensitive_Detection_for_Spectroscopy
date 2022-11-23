@@ -78,7 +78,7 @@ def PSD_calc(): # Calculates PSD spectra
     name_t = name_dataCat.split('.')
     name_t = name_t[0] + '_t.' + name_t[1]
     
-    text = 'Path of your reference spectra'    
+    text = 'Path of your reference spectra'
     name_dataRef = FileOpen(text)
     
     # Data of catalyst spectra and reference spectra
@@ -90,8 +90,10 @@ def PSD_calc(): # Calculates PSD spectra
     if t_inp.ndim == 1:
         t_inp = np.reshape(t_inp,(t_inp.size,1))
         
-    '''Another if clause that transposes row vectors to the desired column ones would be cool'''
-    
+    # if t_inp is a row instead of column vector, ti'll be transposed
+    if t_inp.shape[0] < t_inp.shape[1]:
+        t_inp = t_inp.T
+        
     if name_dataRef!= '':
         dataRef = pd.read_csv(r''+name_dataRef, sep="\t", header = None)
         dataRef = dataRef.values
@@ -143,7 +145,7 @@ def PSD_calc(): # Calculates PSD spectra
     for k in np.arange(1,2): # set k>1 for modeling a rectangular function via fourier synthesis which will be folded with the time resolved spectra
         for i in range(1,len(phi)+1):
             for j in range(0,len(data[:,0])):
-                dummy[j,i] = 2/t_inp[int(n_sp),0]*igr.trapz(data[j,1:]*(1/(2*k))*np.sin((2*k-1)*omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360))
+                dummy[j,i] = 2/t_inp[int(n_sp),0]*igr.trapz(data[j,1:]*(1/(2*k-1)**2)*np.sin((2*k-1)*omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360))
                 
     spectra[:,1:] = spectra[:,1:]+dummy[:,1:]
     
@@ -279,7 +281,7 @@ def in_phase_angle():
     psd_spectra.Wavenumber = pd.Series([round(val, 5) for val in psd_spectra.Wavenumber], index = psd_spectra.index)
     
 
-    if psd_spectra['Wavenumber'].iloc[0] > psd_spectra['Wavenumber'].iloc[-1]: # Bring psd_spectra in an ascending order if they are'nt already
+    if psd_spectra['Wavenumber'].iloc[0] > psd_spectra['Wavenumber'].iloc[-1]: # Bring psd_spectra in an ascending order if they are not already
         psd_spectra = psd_spectra.iloc[::-1]
     
     text = 'Path of your peaks'
@@ -476,7 +478,7 @@ def course():
     # Plot the course
     pos = np.zeros(len(peaks))
     for i in np.arange(0,len(peaks)):
-        if i%15 == 0: # opens a new plot window every XXX lines (insert number of your choice). Otherwise the colours get confusing
+        if i%13 == 0: # opens a new plot window every XXX lines (insert number of your choice). Otherwise the colours get confusing
             # Highlight the different phases of your periodic stimulation
             plt.figure()
             if n_sp != 0:
