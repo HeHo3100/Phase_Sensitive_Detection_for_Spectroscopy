@@ -24,12 +24,13 @@ from tkinter import filedialog
 
 import numpy as np
 from scipy import integrate as igr
+from scipy import signal      
 import matplotlib.pyplot as plt
 import pandas as pd
 
 # The following two lines import stylesheets to format graphs. If you don't have any, comment them out
-if os.environ['LOGNAME'] == 'jakub' :
-    plt.style.use('/home/jakub/HESSENBOX-DA/Diverses/TU_Design.mplstyle')
+# if os.environ['LOGNAME'] == 'jakub' :
+#     plt.style.use('/home/jakub/HESSENBOX-DA/Diverses/TU_Design.mplstyle')
 
 '''
 _______________________________________________________________________________
@@ -140,13 +141,14 @@ def PSD_calc(): # Calculates PSD spectra
     spectra = np.zeros((len(data[:,0]),len(phi)+1))
     spectra[:,0] = dataCat[:,0]
     dummy = spectra
-    
+        
     # Do the fourier transformation for all predefined values of phi
-    for k in np.arange(1,2): # set k>1 for modeling a rectangular function via fourier synthesis which will be folded with the time resolved spectra
-        for i in range(1,len(phi)+1):
-            for j in range(0,len(data[:,0])):
-                dummy[j,i] = 2/t_inp[int(n_sp),0]*igr.trapz(data[j,1:]*(1/(2*k-1)**2)*np.sin((2*k-1)*omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360))
-                
+    for i in range(1,len(phi)+1):
+        for j in range(0,len(data[:,0])): # if your external stimulation is more like a sine or a rectangular curve, comment the respective line out / in
+            '''Maybe rework next 2 lines according to Baurecht 2001 and insert dd-menue for sine / rect.'''
+            # dummy[j,i] = 2/t_inp[int(n_sp),0]*igr.trapz(data[j,1:]*np.sin(omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360)) # simple sine curve
+            dummy[j,i] = 2/t_inp[int(n_sp),0]*igr.trapz(data[j,1:]*signal.square(omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360)) # rectangular function
+    
     spectra[:,1:] = spectra[:,1:]+dummy[:,1:]
     
     # Plot spectra (if needed, uncomment it)
