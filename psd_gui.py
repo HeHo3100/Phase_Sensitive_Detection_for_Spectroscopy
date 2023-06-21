@@ -344,16 +344,28 @@ def in_phase_angle():
     for val in peak_pos:
         peak_pos[i] = min(psd_spectra.Wavenumber, key=lambda x:abs(x-val))
         i = i+1
-        
-    # read time values to convert the maximum phase angle into a time value
     
-    text = 'Path of your time values'
-    name_t = FileOpen(text)
-    t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
+    # Reading time values of different instruments/software having different formats
+    if instrument.get() == "Bruker/OPUS (DRIFTS)":
+        text = 'Path of your time values'
+        name_t = FileOpen(text)
+        t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
+            
+    elif instrument.get() == "Horiba/LabSpec (Raman)":
+        text = 'Path of your catalyst spectra because of needed time values'
+        name_dataCat = FileOpen(text)
+        dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
+        dataCat = dataCat.values     
+        
+        # Calculating t_inp into seconds
+        t_inp = dataCat[1:,0]
+        t_inp = np.reshape(t_inp,(t_inp.size,1))
+        t_inp = (t_inp - t_inp[0]) * 24 * 3600
+        t_inp = t_inp + t_inp[1]
     
     # If t_inp is 1D array convert to 2D array for proper indexing
-    if t_inp.ndim == 1:
-        t_inp = np.reshape(t_inp,(t_inp.size,1))
+    #if t_inp.ndim == 1:
+    #    t_inp = np.reshape(t_inp,(t_inp.size,1))
         
     n_sp = int(Entry_n_sp.get())
     tges = t_inp[n_sp-1,0]
