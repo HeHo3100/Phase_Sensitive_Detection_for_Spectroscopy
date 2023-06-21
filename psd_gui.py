@@ -473,37 +473,99 @@ def course():
     cutoff_per = int(Entry_cutoff_per.get()) #Number of periods to cut off
     cutoff_sp = n_sp*cutoff_per #Calculated number of spectra to cut off
     
-    text = 'Path of your catalyst spectra'
-    name_dataCat = FileOpen(text)
+    # text = 'Path of your catalyst spectra'
+    # name_dataCat = FileOpen(text)
     
-    name_t = name_dataCat.split('.')
-    name_t = name_t[0] + '_t.' + name_t[1]
+    # name_t = name_dataCat.split('.')
+    # name_t = name_t[0] + '_t.' + name_t[1]
     
-    text = 'Path of your reference spectra'
-    name_dataRef = FileOpen(text)
+    # text = 'Path of your reference spectra'
+    # name_dataRef = FileOpen(text)
     
-    text = text = 'Path of your peak positions'
-    name_peaks = FileOpen(text)        
+    # text = 'Path of your peak positions'
+    # name_peaks = FileOpen(text)        
     
     # Data of catalyst spectra, reference spectra and peak positions
-    dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
-    dataCat = dataCat.values
-    t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
-    peaks = np.genfromtxt(r''+name_peaks, delimiter="\n")
+    #dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
+    #dataCat = dataCat.values
+    #t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
+    #peaks = np.genfromtxt(r''+name_peaks, delimiter="\n")
     
-    # If t_inp is 1D array convert to 2D array for proper indexing
-    if t_inp.ndim == 1:
+    #####
+    # Reading data of different instruments/software having different formats    
+    if instrument.get() == "Bruker/OPUS (DRIFTS)":
+        text = 'Path of your catalyst spectra'
+        name_dataCat = FileOpen(text)
+        
+        name_t = name_dataCat.split('.')
+        name_t = name_t[0] + '_t.' + name_t[1]
+        
+        text = 'Path of your reference spectra'    
+        name_dataRef = FileOpen(text)
+        
+        text = 'Path of your peak positions'
+        name_peaks = FileOpen(text)
+        peaks = np.genfromtxt(r''+name_peaks, delimiter="\n")
+        
+        # Data of catalyst spectra and reference spectra
+        dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
+        dataCat = dataCat.values
+        t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
+        
+        if name_dataRef != '':
+            dataRef = pd.read_csv(r''+name_dataRef, sep="\t", header = None)
+            dataRef = dataRef.values
+            
+            # Calculating the difference for gas phase subtraction or whatever you want
+            data = dataCat-dataRef
+            data[:,0] = dataCat[:,0]
+            
+        else :
+            data = dataCat
+        
+    elif instrument.get() == "Horiba/LabSpec (Raman)":
+        text = 'Path of your catalyst spectra'
+        name_dataCat = FileOpen(text)
+        
+        text = 'Path of your reference spectra'
+        name_dataRef = FileOpen(text)
+        
+        text = 'Path of your peak positions'
+        name_peaks = FileOpen(text)
+        peaks = np.genfromtxt(r''+name_peaks, delimiter="\n")
+        
+        # Data of catalyst spectra and reference spectra
+        dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
+        dataCat = dataCat.values
+        
+        # Calculating t_inp into seconds
+        t_inp = dataCat[1:,0]
         t_inp = np.reshape(t_inp,(t_inp.size,1))
+        t_inp = (t_inp - t_inp[0]) * 24 * 3600
+        t_inp = t_inp + t_inp[1]
+        
+        dataCat = np.delete(dataCat, 0, axis=1)
+        dataCat = dataCat.T
+        
+        if name_dataRef != '':
+            dataRef = pd.read_csv(r''+name_dataRef, sep="\t", header = None)
+            dataRef = dataRef.values
+            dataRef = np.delete(dataRef, 0, axis=1)
+            dataRef = dataRef.T
+            
+            # Calculating the difference for gas phase subtraction or whatever you want
+            data = dataCat-dataRef
+            data[:,0] = dataCat[:,0]
+            
+        else :
+            data = dataCat
+    #####
     
-    if name_dataRef!= '': #If no reference data is given then skip it
-        dataRef = np.genfromtxt(r''+name_dataRef, delimiter="\t")
         
-        # Calculating the difference for gas phase subtraction or whatever you want
-        data = dataCat-dataRef
-        data[:,0] = dataCat[:,0]
-        
-    else :
-        data = dataCat
+    # If t_inp is 1D array convert to 2D array for proper indexing
+    #if t_inp.ndim == 1:
+    #    t_inp = np.reshape(t_inp,(t_inp.size,1))
+    
     
     if cutoff_sp != 0:
         # Cut off spectra from the beginning
