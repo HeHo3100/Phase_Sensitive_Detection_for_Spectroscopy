@@ -28,8 +28,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # The following two lines import stylesheets to format graphs. If you don't have any, comment them out
-if os.environ['LOGNAME'] == 'jakub' :
-    plt.style.use('/home/jakub/HESSENBOX-DA/Diverses/TU_Design.mplstyle')
+#if os.environ['LOGNAME'] == 'jakub' :
+#    plt.style.use('/home/jakub/HESSENBOX-DA/Diverses/TU_Design.mplstyle')
 
 '''
 _______________________________________________________________________________
@@ -521,7 +521,7 @@ DD_yUnit = OptionMenu(PSD_GUI, yUnit, *yUnit_list)
 DD_yUnit.config(width=14)
 DD_yUnit.pack()
 
-Label_DD_yUnit = Label(PSD_GUI, text = 'Choose your x label!').pack()
+Label_DD_xUnit = Label(PSD_GUI, text = 'Choose your x label!').pack()
 
 xUnit_list = {'Wavenumber in 1/cm': r'$\tilde{\nu}$ / cm$^{-1}$', 'Energy in eV': r'$E$ / eV', 'Wavelength in nm': r'$\lambda$ / nm', 'Raman Shift in 1/cm': r'$\Delta\tilde{\nu}$ / cm$^{-1}$'}
 xUnit = StringVar(PSD_GUI)
