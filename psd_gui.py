@@ -221,6 +221,27 @@ def Spectra_diff():
     text = 'Path of your reference spectra'
     name_dataRef = FileOpen(text)
     
+    # Reading data of different instruments/software having different formats
+    if instrument.get() == "Bruker/OPUS (DRIFTS)":
+        # Data of catalyst spectra and reference spectra
+        dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
+        dataCat = dataCat.values
+        
+        dataRef = pd.read_csv(r''+name_dataRef, sep="\t", header = None)
+        dataRef = dataRef.values
+            
+    elif instrument.get() == "Horiba/LabSpec (Raman)":
+        # Data of catalyst spectra and reference spectra
+        dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
+        dataCat = dataCat.values
+        dataCat = np.delete(dataCat, 0, axis=1)
+        dataCat = dataCat.T
+        
+        dataRef = pd.read_csv(r''+name_dataRef, sep="\t", header = None)
+        dataRef = dataRef.values
+        dataRef = np.delete(dataRef, 0, axis=1)
+        dataRef = dataRef.T
+        
     # Data of catalyst spectra and reference spectra
     dataCat = pd.read_csv(r''+name_dataCat, sep="\t") # , header = None) # if dataset got header: comment last argument out (can't compute strings!))
     dataCat = dataCat.values
