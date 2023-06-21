@@ -65,42 +65,78 @@ _______________________________________________________________________________
 def PSD_calc(): # Calculates PSD spectra
     # Number of spectra per period, periods to cut off, phase resolution and the path are input via the GUI
     
+    start = time.time()
+    
     n_sp = int(Entry_n_sp.get()) # Number of spectra per period
     cutoff_per = int(Entry_cutoff_per.get()) #Number of periods to cut off
     cutoff_sp = n_sp*cutoff_per # Calculated number of spectra to cut off
     dphi = int(Entry_dphi.get()) # Phasse resolution
     
-    text = 'Path of your catalyst spectra'
-    name_dataCat = FileOpen(text)
-    
-    start = time.time()
-    
-    name_t = name_dataCat.split('.')
-    name_t = name_t[0] + '_t.' + name_t[1]
-    
-    text = 'Path of your reference spectra'    
-    name_dataRef = FileOpen(text)
-    
-    # Data of catalyst spectra and reference spectra
-    dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
-    dataCat = dataCat.values
-    t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
-    
-    # If t_inp is 1D array convert to 2D array for proper indexing
-    if t_inp.ndim == 1:
+    # Reading data of different instruments/software having different formats    
+    if instrument.get() == "Bruker/OPUS (DRIFTS)":
+        text = 'Path of your catalyst spectra'
+        name_dataCat = FileOpen(text)
+        
+        name_t = name_dataCat.split('.')
+        name_t = name_t[0] + '_t.' + name_t[1]
+        
+        text = 'Path of your reference spectra'    
+        name_dataRef = FileOpen(text)
+        
+        # Data of catalyst spectra and reference spectra
+        dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
+        dataCat = dataCat.values
+        t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
+        
+        if name_dataRef != '':
+            dataRef = pd.read_csv(r''+name_dataRef, sep="\t", header = None)
+            dataRef = dataRef.values
+            
+            # Calculating the difference for gas phase subtraction or whatever you want
+            data = dataCat-dataRef
+            data[:,0] = dataCat[:,0]
+            
+        else :
+            data = dataCat
+        
+    elif instrument.get() == "Horiba/LabSpec (Raman)":
+        text = 'Path of your catalyst spectra'
+        name_dataCat = FileOpen(text)
+        
+        text = 'Path of your reference spectra'
+        name_dataRef = FileOpen(text)
+        
+        # Data of catalyst spectra and reference spectra
+        dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
+        dataCat = dataCat.values
+        
+        # Calculating t_inp into seconds
+        t_inp = dataCat[1:,0]
         t_inp = np.reshape(t_inp,(t_inp.size,1))
-    
-    if name_dataRef!= '':
-        dataRef = pd.read_csv(r''+name_dataRef, sep="\t", header = None)
-        dataRef = dataRef.values
+        t_inp = (t_inp - t_inp[0]) * 24 * 3600
+        t_inp = t_inp + t_inp[1]
         
-        # Calculating the difference for gas phase subtraction or whatever you want
-        data = dataCat-dataRef
-        data[:,0] = dataCat[:,0]
+        dataCat = np.delete(dataCat, 0, axis=1)
+        dataCat = dataCat.T
         
-    else :
-        data = dataCat
+        if name_dataRef != '':
+            dataRef = pd.read_csv(r''+name_dataRef, sep="\t", header = None)
+            dataRef = dataRef.values
+            dataRef = np.delete(dataRef, 0, axis=1)
+            dataRef = dataRef.T
+            
+            # Calculating the difference for gas phase subtraction or whatever you want
+            data = dataCat-dataRef
+            data[:,0] = dataCat[:,0]
+            
+        else :
+            data = dataCat
+                  
+    # If t_inp is 1D array convert to 2D array for proper indexing
+    #if t_inp.ndim == 1:
+    #    t_inp = np.reshape(t_inp,(t_inp.size,1))
     
+       
     if cutoff_sp != 0:
         # Cut off spectra from the beginning
         data = np.delete(data, np.s_[1:cutoff_sp+1], axis = 1)
@@ -496,7 +532,7 @@ PSD_GUI.title('Have fun with PSD!')
 
 Label_DD_instrument = Label(PSD_GUI, text = 'Choose your instrument/software!').pack()
 
-instrument_list = {'Bruker/OPUS (DRIFTS)', 'Horiba/LabSpec (Raman)'}
+instrument_list = ['Bruker/OPUS (DRIFTS)', 'Horiba/LabSpec (Raman)']
 instrument = StringVar(PSD_GUI)
 instrument.set('Bruker/OPUS (DRIFTS)')
 DD_instrument = OptionMenu(PSD_GUI, instrument, *instrument_list)
