@@ -656,7 +656,10 @@ Label_DD_yUnit = Label(PSD_GUI, text = 'Choose your y label!').pack()
 
 yUnit_list = {'-lg(R)': r'-lg($R$)', 'Extinction': r'$E$', 'Transmission in %': r'$T$ / %', 'Absorption in %': r'$A$ / %', 'Intensity in a.U.': r'$I$ / a.U.'}
 yUnit = StringVar(PSD_GUI)
-yUnit.set('-lg(R)')
+if instrument.get() == "Bruker/OPUS (DRIFTS)":
+    yUnit.set('-lg(R)')
+elif instrument.get() == "Horiba/LabSpec (Raman)":
+    yUnit.set('Intensity in a.U.')
 DD_yUnit = OptionMenu(PSD_GUI, yUnit, *yUnit_list)
 DD_yUnit.config(width=14)
 DD_yUnit.pack()
