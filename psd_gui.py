@@ -284,10 +284,11 @@ def PointPicking():
     fig = plt.figure()
     text = 'Path of your spectra'
     name_dataSpectra = FileOpen(text)
-    dataSpectra = pd.read_csv(r''+name_dataSpectra, sep="\t")
-    dataSpectra = dataSpectra.values
 
     if 'PSD' in name_dataSpectra:
+        # Data of PSD spectra
+        dataSpectra = pd.read_csv(r''+name_dataSpectra, sep="\t")
+        dataSpectra = dataSpectra.values
         # Plot all spectra at once
         plt.clf()
         plt.xlabel(xUnit_list[xUnit.get()]) # Gets x axis label
@@ -319,11 +320,31 @@ def PointPicking():
         n_sp = int(Entry_n_sp.get()) # Number of spectra per period
         cutoff_per = int(Entry_cutoff_per.get()) #Number of periods to cut off
         cutoff_sp = n_sp*cutoff_per # Calculated number of spectra to cut off
-        name_t = name_dataSpectra.split('.')
-        name_t = name_t[0] + '_t.' + name_t[1]
         
-        t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
-        
+        # Reading data of different instruments/software having different formats
+        if instrument.get() == "Bruker/OPUS (DRIFTS)":
+            # Data of catalyst spectra
+            dataSpectra = pd.read_csv(r''+name_dataSpectra, sep="\t")
+            dataSpectra = dataSpectra.values
+            
+            name_t = name_dataSpectra.split('.')
+            name_t = name_t[0] + '_t.' + name_t[1]        
+            t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
+                
+        elif instrument.get() == "Horiba/LabSpec (Raman)":
+            # Data of catalyst spectra
+            dataSpectra = pd.read_csv(r''+name_dataSpectra, sep="\t", header = None)
+            dataSpectra = dataSpectra.values
+            
+            # Calculating t_inp into seconds
+            t_inp = dataSpectra[1:,0]
+            t_inp = np.reshape(t_inp,(t_inp.size,1))
+            t_inp = (t_inp - t_inp[0]) * 24 * 3600
+            t_inp = t_inp + t_inp[1]
+            
+            dataSpectra = np.delete(dataSpectra, 0, axis=1)
+            dataSpectra = dataSpectra.T
+       
         if cutoff_sp != 0:
             # Cut off spectra from the beginning
             dataSpectra = np.delete(dataSpectra, np.s_[1:cutoff_sp+1], axis = 1)
