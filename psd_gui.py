@@ -166,7 +166,8 @@ def PSD_calc(): # Calculates PSD spectra
         i = i+1
         
     # Definition of values for the fourier transformation
-    omega = 2*np.pi/t_inp[int(n_sp),0] # omega as 2pi/t_OnePeriod, t_OnePeriod is generated from the number of measurements until the second period begins
+    t_per = t_inp[n_sp-1,0]
+    omega = 2*np.pi/t_per # omega in s^-1
     phi = np.arange(0,361,dphi) # phi is the phase shift which occurs as answer of the system to the external stimulation in the experiment
     
     spectra = np.zeros((len(data[:,0]),len(phi)+1))
@@ -237,13 +238,13 @@ def Spectra_diff():
         dataCat = np.delete(dataCat, 0, axis=1)
         dataCat = dataCat.T
         
-        dataRef = pd.read_csv(r''+name_dataRef, sep="\t", header = None)
+        dataRef = pd.read_csv(r''+name_dataRef, sep="\t")#, header = None)
         dataRef = dataRef.values
         dataRef = np.delete(dataRef, 0, axis=1)
         dataRef = dataRef.T
         
     # Data of catalyst spectra and reference spectra
-    dataCat = pd.read_csv(r''+name_dataCat, sep="\t") # , header = None) # if dataset got header: comment last argument out (can't compute strings!))
+    dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None) # if dataset got header: comment last argument out (can't compute strings!))
     dataCat = dataCat.values
     
     dataRef = pd.read_csv(r''+name_dataRef, sep="\t") # , header = None)
@@ -254,15 +255,15 @@ def Spectra_diff():
     data[:,0] = dataCat[:,0]
     
     # plots the difference spectra
-    plt.figure()
+    # plt.figure()
     
-    plt.plot(data[:,0],data[:,1:])
+    # plt.plot(data[:,0],data[:,1:])
     
-    # grabs x and y units for graph
-    plt.xlabel(xUnit_list[xUnit.get()]) # Gets x axis label
-    plt.ylabel(yUnit_list[yUnit.get()]) # Gets y axis label
+    # # grabs x and y units for graph
+    # plt.xlabel(xUnit_list[xUnit.get()]) # Gets x axis label
+    # plt.ylabel(yUnit_list[yUnit.get()]) # Gets y axis label
     
-    plt.ylim(-np.amax(data[:,1:]), np.amax(data[:,1:]))
+    # plt.ylim(-np.amax(data[:,1:]), np.amax(data[:,1:]))
     
     # Put difference spectra into data frame
     diff = ['diff ' + str(i) for i in range(1,len(data[0,:]))]
@@ -279,39 +280,189 @@ def Spectra_diff():
 
     return
 
-def PeakPicking():
+def PointPicking():
     fig = plt.figure()
     text = 'Path of your spectra'
-    name_psd = FileOpen(text)
-    psd = pd.read_csv(r''+name_psd, sep="\t")
-    psd = psd.values
+    name_dataSpectra = FileOpen(text)
+    dataSpectra = pd.read_csv(r''+name_dataSpectra, sep="\t")
+    dataSpectra = dataSpectra.values
 
-    # Plot all spectra at once
-    plt.clf()
-    plt.xlabel(xUnit_list[xUnit.get()]) # Gets x axis label
-    plt.ylabel(yUnit_list[yUnit.get()]) # Gets y axis label
-    
-    for i in range(1, psd.shape[1]-1):
-        plt.plot(psd[0:,0],psd[0:,i], 'o', picker = 3)
-        plt.ylim(-np.amax(psd[:,1:]), np.amax(psd[:,1:]))
-        plt.show()
+    if 'PSD' in name_dataSpectra:
+        # Plot all spectra at once
+        plt.clf()
+        plt.xlabel(xUnit_list[xUnit.get()]) # Gets x axis label
+        plt.ylabel(yUnit_list[yUnit.get()]) # Gets y axis label
         
-        bands = []
-        
-        def onpick(event): # This function allows you to save the current position of your mouse to an array when clicked on a point of the shown graph
-            thisline = event.artist
-            xdata = thisline.get_xdata()
-            ind = event.ind
-            points = xdata[ind]
-            bands.append(points[int(len(points)/2)]) # Append currently clicked on position to array
-                        
-            # Save as soon as a point is clicked on
-            bands_new = sorted(set(bands)) # sorted sorts, set sorts and removes doubly counted ones
-            name = name_psd.split('.')
-            bands_new = np.array(bands_new)
-            np.savetxt(name[0] + '_peaks.txt',bands_new, delimiter = '\t')
+        for i in range(1, dataSpectra.shape[1]):
+            plt.plot(dataSpectra[0:,0],dataSpectra[0:,i], 'o', picker = 3)
+            plt.ylim(-np.amax(dataSpectra[:,1:]), np.amax(dataSpectra[:,1:]))
+            plt.show()
             
-    fig.canvas.mpl_connect('pick_event', onpick)
+            bands = []
+            
+            def onpick(event): # This function allows you to save the current position of your mouse to an array when clicked on a point of the shown graph
+                thisline = event.artist
+                xdata = thisline.get_xdata()
+                ind = event.ind
+                points = xdata[ind]
+                bands.append(points[int(len(points)/2)]) # Append currently clicked on position to array
+                            
+                # Save as soon as a point is clicked on
+                bands_new = sorted(set(bands)) # sorted sorts, set sorts and removes doubly counted ones
+                name = name_dataSpectra.split('.')
+                bands_new = np.array(bands_new)
+                np.savetxt(name[0] + '_peaks.txt',bands_new, delimiter = '\t')
+                
+        fig.canvas.mpl_connect('pick_event', onpick)
+        
+    else:
+        n_sp = int(Entry_n_sp.get()) # Number of spectra per period
+        cutoff_per = int(Entry_cutoff_per.get()) #Number of periods to cut off
+        cutoff_sp = n_sp*cutoff_per # Calculated number of spectra to cut off
+        name_t = name_dataSpectra.split('.')
+        name_t = name_t[0] + '_t.' + name_t[1]
+        
+        t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
+        
+        if cutoff_sp != 0:
+            # Cut off spectra from the beginning
+            dataSpectra = np.delete(dataSpectra, np.s_[1:cutoff_sp+1], axis = 1)
+            t_inp = np.delete(t_inp,np.s_[-(cutoff_sp):],axis = 0)
+            
+        n_per = t_inp.shape[0]/n_sp # number of periods by dividing number of spectra by number of spectra per period
+        
+        # Averaging all periods into one period        
+        Energy_values = (dataSpectra[:,0]) # Cache the energy values / wavenumbers
+        
+        Energy_values = np.reshape(Energy_values,(Energy_values.size,1)) # Make 2D array for further computations
+        
+        spectra_per = np.split(dataSpectra[:,1:], n_per, axis = 1) # Split the wholeness of all spectra in 'data' into minor ndarrays for each period
+        
+        sum_spectra_per = np.divide(sum(spectra_per),n_per) # sum up all cells of the created ndarrays that have the same index and divide by the number of periods
+            
+        dataSpectra = np.concatenate((Energy_values, sum_spectra_per),axis = 1) # Concatenate Energy_values and averaged spectra back into 'data'
+
+        # Plot a view spectra at once
+        plt.clf()
+        plt.xlabel(xUnit_list[xUnit.get()]) # Gets x axis label
+        plt.ylabel(yUnit_list[yUnit.get()]) # Gets y axis label
+        
+        n_plot = 10 # number of spectra to plot
+        j = n_sp/n_plot
+        if divmod(n_sp,n_plot)[1] != 0:
+            j = (n_sp - divmod(n_sp,n_plot)[1])/n_plot
+        
+        #for i in range(1, dataCat.shape[1]-1):
+        for i in range(1, n_plot+1):
+            plt.plot(dataSpectra[0:,0],dataSpectra[0:,int(i*j)], 'o', picker = 3)
+            plt.ylim(-np.amax(dataSpectra[:,1:]), np.amax(dataSpectra[:,1:]))
+            plt.show()
+            
+            bands = []
+            
+            def onpick(event): # This function allows you to save the current position of your mouse to an array when clicked on a point of the shown graph
+                thisline = event.artist
+                xdata = thisline.get_xdata()
+                ind = event.ind
+                points = xdata[ind]
+                bands.append(points[int(len(points)/2)]) # Append currently clicked on position to array
+                            
+                # Save as soon as a point is clicked on
+                bands_new = sorted(set(bands)) # sorted sorts, set sorts and removes doubly counted ones
+                name = name_dataSpectra.split('.')
+                bands_new = np.array(bands_new)
+                np.savetxt(name[0] + '_BLpoints.txt',bands_new, delimiter = '\t')
+                
+        fig.canvas.mpl_connect('pick_event', onpick)
+    
+    return
+
+def Baseline(): # generate and substract baseline and PSD
+    n_sp = int(Entry_n_sp.get()) # Number of spectra per period
+    cutoff_per = int(Entry_cutoff_per.get()) #Number of periods to cut off
+    cutoff_sp = n_sp*cutoff_per # Calculated number of spectra to cut off
+    
+    text = 'Path of your catalyst spectra'
+    name_dataCat = FileOpen(text)
+    
+    text = 'Path of your baseline points'
+    name_points = FileOpen(text)
+    
+    name_t = name_dataCat.split('.')
+    name_t = name_t[0] + '_t.' + name_t[1]
+    
+    # Data of catalyst spectra
+    dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
+    dataCat = dataCat.values
+    t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
+    
+    if cutoff_sp != 0:
+        # Cut off spectra from the beginning
+        dataCat = np.delete(dataCat, np.s_[1:cutoff_sp+1], axis = 1)
+        t_inp = np.delete(t_inp,np.s_[-(cutoff_sp):],axis = 0)
+        
+    
+    n_per = t_inp.shape[0]/n_sp # number of periods by dividing number of spectra by number of spectra per period
+    
+    
+    # Averaging all periods into one period
+    
+    Energy_values = (dataCat[:,0]) # Cache the energy values / wavenumbers
+    
+    Energy_values = np.reshape(Energy_values,(Energy_values.size,1)) # Make 2D array for further computations
+    
+    spectra = dataCat[:,1:]    
+    
+    # generating baseline
+    point_pos = np.genfromtxt(r''+name_points, delimiter="\n")
+    # peak_pos = peak_pos[::-1] #Needs to be inverted otherwise it is the wrong way around!
+    
+    '''Compares every value in peak_pos with the wavenumbers from psd_spectra
+    and the closest value is taken'''
+    index_Energy = np.zeros(len(point_pos))
+    i = 0
+    for val in point_pos:
+        point_pos[i] = min(Energy_values, key=lambda x:abs(x-val))        
+        index_Energy[i] = abs(Energy_values-point_pos[i]).argmin()
+        #Energy_values.index(point_pos[i])   
+        i = i+1
+        
+    index_Energy = np.flip(index_Energy)    
+
+    n_avg = 5 # number of data points to average each intensity (must be odd)
+
+    I_mean = np.zeros((int(n_sp*n_per), len(point_pos)))
+    I_bl = np.zeros((len(spectra), int(n_sp*n_per)))
+    m = np.zeros((int(n_sp*n_per), len(point_pos)+1))
+    b = np.zeros((int(n_sp*n_per), len(point_pos)+1))
+    
+    for i in range(len(point_pos)+1):
+        if i == 0:
+            I_mean_start = np.mean(spectra[:n_avg,:], axis=0)
+            I_mean[:,i] = np.mean(spectra[int(index_Energy[i]-(n_avg-1)/2):int(index_Energy[i]+(n_avg-1)/2+1), :], axis=0)
+            m[:,i] = (I_mean[:,i]-I_mean_start)/(Energy_values[int(index_Energy[i])]-Energy_values[0])
+            b[:,i] = I_mean_start - m[:,i] * Energy_values[0]
+            I_bl[:int(index_Energy[i]),:] = m[:,i] * Energy_values[:int(index_Energy[i])] + b[:,i]
+        elif i > 0 and i < len(point_pos):
+            I_mean[:,i] = np.mean(spectra[int(index_Energy[i]-(n_avg-1)/2):int(index_Energy[i]+(n_avg-1)/2+1), :], axis=0)
+            m[:,i] = (I_mean[:,i]-I_mean[:,i-1])/(Energy_values[int(index_Energy[i])]-Energy_values[int(index_Energy[i-1])])
+            b[:,i] = I_mean[:,i] - m[:,i] * Energy_values[int(index_Energy[i])]
+            I_bl[int(index_Energy[i-1]):int(index_Energy[i]),:] = m[:,i] * Energy_values[int(index_Energy[i-1]):int(index_Energy[i])] + b[:,i]
+        else:
+            I_mean_end = np.mean(spectra[len(Energy_values)-n_avg:len(Energy_values),:], axis=0)
+            m[:,i] = (I_mean_end-I_mean[:,i-1])/(Energy_values[len(Energy_values)-1]-Energy_values[int(index_Energy[i-1])])
+            b[:,i] = I_mean_end - m[:,i] * Energy_values[len(Energy_values)-1]
+            I_bl[int(index_Energy[i-1]):len(Energy_values),:] = m[:,i] * Energy_values[int(index_Energy[i-1]):len(Energy_values)] + b[:,i]
+   
+    data_baseline = np.concatenate((Energy_values, I_bl),axis = 1) # Concatenate Energy_values and baseline back into 'data'
+    output = pd.DataFrame(data = data_baseline[:,:], columns = None)    
+    
+    # Save the baseline
+    
+    text = 'Shall the baseline be saved as .txt?'
+    name = name_dataCat.split('.')
+    name = name[0] + '_baseline.txt'
+    yesno(name, output, text)    
     
     return
 
@@ -368,7 +519,7 @@ def in_phase_angle():
     #    t_inp = np.reshape(t_inp,(t_inp.size,1))
         
     n_sp = int(Entry_n_sp.get())
-    tges = t_inp[n_sp-1,0]
+    t_per = t_inp[n_sp-1,0]
     
     # Separate the rows belonging to the chosen peak positions 
     phi_at_peaks = psd_spectra[psd_spectra.Wavenumber.isin(peak_pos)]
@@ -385,13 +536,13 @@ def in_phase_angle():
     Wmax = np.array(Wmax,dtype = int)
     
     # Convert phase angle at maximum into time at maximum
-    tmax = (360-Wmax)/360*tges
+    tmax = (360-Wmax)/360*t_per
     
     # Rounds wavenumber and time value to one decimal and puts all into data frame
     peak_pos = np.around(peak_pos,1)
     tmax = np.around(tmax,1)
     
-    output = pd.DataFrame({'Wavenumber': peak_pos, 'Phi_max / °': Wmax, 't / s with t_Per. = ' + str(tges) + ' s': tmax})
+    output = pd.DataFrame({'Wavenumber': peak_pos, 'Phi_max / °': Wmax, 't / s with t_Per. = ' + str(t_per) + ' s': tmax})
     
     # Save dataframe
     text = 'Shall peak positions and in phase angles be saved as .txt?'
@@ -637,7 +788,7 @@ DD_instrument.pack()
 Label_n_sp = Label(PSD_GUI, text = 'Type in the number of spectra per period!').pack()
 
 Entry_n_sp = Entry(PSD_GUI, textvariable = Entry_n_sp)
-Entry_n_sp.insert(END,'40')
+Entry_n_sp.insert(END,'320')
 Entry_n_sp.pack()
 
 Label_cutoff_per = Label(PSD_GUI, text = 'Choose the number of periods to cut off!').pack()
@@ -676,9 +827,13 @@ DD_xUnit.pack()
 
 Bt_PSD_calc = Button(PSD_GUI, text = 'TRS -> PSD', command = PSD_calc).pack()
 
-Label_PeakPicking = Label(PSD_GUI, text = 'If no graph is shown, close all tkinter windows except your graph! \n If a data point is clicked on, all data points \n clicked on until now are written into a file:').pack()
+Label_PointPicking = Label(PSD_GUI, text = 'If no graph is shown, close all tkinter windows except your graph! \n If a data point is clicked on, all data points \n clicked on until now are written into a file:').pack()
 
-Bt_PeakPicking = Button(PSD_GUI, text = 'peak picking', command = PeakPicking).pack()
+Bt_PointPicking = Button(PSD_GUI, text = 'point picking', command = PointPicking).pack()
+
+Label_Baseline_corr = Label(PSD_GUI, text = 'Generate a baseline with picked points:').pack()
+
+Bt_Baseline_corr = Button(PSD_GUI, text = 'baseline', command = Baseline).pack()
 
 Label_Spectra_diff = Label(PSD_GUI, text = 'Here you calculate difference spectra:').pack()
 
