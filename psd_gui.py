@@ -166,6 +166,7 @@ def PSD_calc(): # Calculates PSD spectra
         i = i+1
         
     # Definition of values for the fourier transformation
+    
     t_per = t_inp[n_sp-1,0]
     omega = 2*np.pi/t_per # omega in s^-1
     phi = np.arange(0,361,dphi) # phi is the phase shift which occurs as answer of the system to the external stimulation in the experiment
@@ -505,13 +506,17 @@ def in_phase_angle():
     # Needs to round because pandas uses more decimals than numpy
     psd_spectra.Wavenumber = pd.Series([round(val, 5) for val in psd_spectra.Wavenumber], index = psd_spectra.index)
     
+    
+    if psd_spectra['Wavenumber'].iloc[0] > psd_spectra['Wavenumber'].iloc[-1]: # Bring psd_spectra in an ascending order if they are not already
+        psd_spectra = psd_spectra.iloc[::-1]
+    
     text = 'Path of your peaks'
     name_peaks = FileOpen(text)
     peak_pos = np.genfromtxt(r''+name_peaks, delimiter="\n")
-    # peak_pos = peak_pos[::-1] #Needs to be inverted otherwise it is the wrong way around!
     
-    '''Compares every value in peak_pos with the wavenumbers from psd_spectra
-    and the closest value is taken'''
+    peak_pos = np.sort(peak_pos) # sort peaks in ascending order
+    
+    # Compares every value in peak_pos with the wavenumbers from psd_spectra and the closest value is taken'''
     i = 0
     for val in peak_pos:
         peak_pos[i] = min(psd_spectra.Wavenumber, key=lambda x:abs(x-val))
@@ -779,7 +784,7 @@ def course():
     
     # Save data frame to a file?
     
-    text = 'Shall the difference spectra be saved as .txt?'
+    text = 'Shall the course be saved as .txt?'
     name = name_dataCat.split('.') #Will be used as filename
     name = name[0] + '_course.txt'
     yesno(name, output, text)
