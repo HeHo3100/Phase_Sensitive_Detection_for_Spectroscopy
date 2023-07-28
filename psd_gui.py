@@ -84,7 +84,7 @@ def PSD_calc(): # Calculates PSD spectra
         name_dataRef = FileOpen(text)
         
         # Data of catalyst spectra and reference spectra
-        dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
+        dataCat = pd.read_csv(r''+name_dataCat, sep="\t")#, header = None) # Maybe comment header = None
         dataCat = dataCat.values
         t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
         
@@ -107,7 +107,7 @@ def PSD_calc(): # Calculates PSD spectra
         name_dataRef = FileOpen(text)
         
         # Data of catalyst spectra and reference spectra
-        dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
+        dataCat = pd.read_csv(r''+name_dataCat, sep="\t")#, header = None) # Maybe comment header = None
         dataCat = dataCat.values
         
         # Calculating t_inp into seconds
@@ -169,7 +169,7 @@ def PSD_calc(): # Calculates PSD spectra
     
     t_per = t_inp[n_sp-1,0]
     omega = 2*np.pi/t_per # omega in s^-1
-    phi = np.arange(0,361,dphi) # phi is the phase shift which occurs as answer of the system to the external stimulation in the experiment
+    phi = np.arange(0,360,dphi) # phi is the phase shift which occurs as answer of the system to the external stimulation in the experiment
     
     spectra = np.zeros((len(data[:,0]),len(phi)+1))
     spectra[:,0] = dataCat[:,0]
@@ -254,6 +254,9 @@ def Spectra_diff():
     # Calculating the difference for gas phase subtraction or whatever you want
     data = dataCat-dataRef
     data[:,0] = dataCat[:,0]
+    
+    if instrument.get() == "Horiba/LabSpec (Raman)":
+        data[0,:] = dataCat[0,:]
     
     # plots the difference spectra
     # plt.figure()
@@ -403,20 +406,76 @@ def Baseline(): # generate and substract baseline and PSD
     n_sp = int(Entry_n_sp.get()) # Number of spectra per period
     cutoff_per = int(Entry_cutoff_per.get()) #Number of periods to cut off
     cutoff_sp = n_sp*cutoff_per # Calculated number of spectra to cut off
-    
-    text = 'Path of your catalyst spectra'
-    name_dataCat = FileOpen(text)
-    
-    text = 'Path of your baseline points'
-    name_points = FileOpen(text)
-    
-    name_t = name_dataCat.split('.')
-    name_t = name_t[0] + '_t.' + name_t[1]
-    
-    # Data of catalyst spectra
-    dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
-    dataCat = dataCat.values
-    t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
+
+    # Reading data of different instruments/software having different formats    
+    if instrument.get() == "Bruker/OPUS (DRIFTS)":
+        text = 'Path of your catalyst spectra'
+        name_dataCat = FileOpen(text)
+        
+        text = 'Path of your reference spectra'    
+        name_dataRef = FileOpen(text)
+        
+        text = 'Path of your baseline points'
+        name_points = FileOpen(text)
+        
+        name_t = name_dataCat.split('.')
+        name_t = name_t[0] + '_t.' + name_t[1]            
+        
+        # Data of catalyst spectra and reference spectra
+        dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
+        dataCat = dataCat.values
+        t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
+        
+        if name_dataRef != '':
+            dataRef = pd.read_csv(r''+name_dataRef, sep="\t", header = None)
+            dataRef = dataRef.values
+            
+            # Calculating the difference for gas phase subtraction or whatever you want
+            data = dataCat-dataRef
+            data[:,0] = dataCat[:,0]
+            
+        else :
+            data = dataCat
+            
+    elif instrument.get() == "Horiba/LabSpec (Raman)":
+        text = 'Path of your catalyst spectra'
+        name_dataCat = FileOpen(text)
+        
+        text = 'Path of your reference spectra'
+        name_dataRef = FileOpen(text)
+        
+        text = 'Path of your baseline points'
+        name_points = FileOpen(text)
+        
+        # Data of catalyst spectra and reference spectra
+        dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None)
+        dataCat = dataCat.values
+        
+        # Extract time values for later saving
+        t_save = dataCat[:,0]
+        t_save = np.reshape(t_save,(t_save.size,1))
+        
+        # Calculating t_inp into seconds
+        t_inp = dataCat[1:,0]
+        t_inp = np.reshape(t_inp,(t_inp.size,1))
+        t_inp = (t_inp - t_inp[0]) * 24 * 3600
+        t_inp = t_inp + t_inp[1]
+        
+        dataCat = np.delete(dataCat, 0, axis=1)
+        dataCat = dataCat.T
+        
+        if name_dataRef != '':
+            dataRef = pd.read_csv(r''+name_dataRef, sep="\t", header = None)
+            dataRef = dataRef.values
+            dataRef = np.delete(dataRef, 0, axis=1)
+            dataRef = dataRef.T
+            
+            # Calculating the difference for gas phase subtraction or whatever you want
+            data = dataCat-dataRef
+            data[:,0] = dataCat[:,0]
+            
+        else :
+            data = dataCat
     
     if cutoff_sp != 0:
         # Cut off spectra from the beginning
@@ -476,10 +535,15 @@ def Baseline(): # generate and substract baseline and PSD
             b[:,i] = I_mean_end - m[:,i] * Energy_values[len(Energy_values)-1]
             I_bl[int(index_Energy[i-1]):len(Energy_values),:] = m[:,i] * Energy_values[int(index_Energy[i-1]):len(Energy_values)] + b[:,i]
    
-    data_baseline = np.concatenate((Energy_values, I_bl),axis = 1) # Concatenate Energy_values and baseline back into 'data'
-    output = pd.DataFrame(data = data_baseline[:,:], columns = None)    
+    data_baseline = np.concatenate((Energy_values, I_bl),axis = 1) # Concatenate Energy_values and baseline back into 'data'       
     
     # Save the baseline
+                     
+    if instrument.get() == "Horiba/LabSpec (Raman)":
+        data_baseline = data_baseline.T
+        data_baseline = np.concatenate((t_save,data_baseline),axis = 1) # Concatenate t_save and baseline_data 
+
+    output = pd.DataFrame(data = data_baseline[:,:], columns = None) 
     
     text = 'Shall the baseline be saved as .txt?'
     name = name_dataCat.split('.')
@@ -736,7 +800,6 @@ def course():
             
         else :
             data = dataCat
-    #####
     
         
     # If t_inp is 1D array convert to 2D array for proper indexing
@@ -748,6 +811,8 @@ def course():
         # Cut off spectra from the beginning
         data = np.delete(data, np.s_[1:cutoff_sp+1], axis = 1)
         t_inp = np.delete(t_inp,np.s_[-(cutoff_sp):],axis = 0)
+        
+    n_per = t_inp.shape[0]/n_sp # number of periods by dividing number of spectra by number of spectra per period
     
     t_1spectrum = t_inp[1,0]-t_inp[0,0] #Calculates the time needed for measuring one spectrum
     print('One spectrum needed ' + str(t_1spectrum) + ' s.')
@@ -764,7 +829,9 @@ def course():
             # Highlight the different phases of your periodic stimulation
             plt.figure()
             if n_sp != 0:
-                for j in np.arange(min(t_inp[:,0]),max(t_inp[:,0]/60),n_sp*t_1spectrum/60): #divide by 60 to get from s to min
+                #for j in np.arange(min(t_inp[:,0]/60),max(t_inp[:,0]/60),n_sp*t_1spectrum/60): #divide by 60 to get from s to min
+                    # plt.axvspan(j, j+n_sp/2*t_1spectrum/60, facecolor='k', alpha=0.25)
+                for j in np.arange(0, max(t_inp[:,0]/60), max(t_inp[:,0]/60)/n_per): #divide by 60 to get from s to min
                     plt.axvspan(j, j+n_sp/2*t_1spectrum/60, facecolor='k', alpha=0.25)
         
         dummy = np.where(data[:,0] == peaks[i])
@@ -806,7 +873,7 @@ Label_DD_instrument = Label(PSD_GUI, text = 'Choose your instrument/software!').
 
 instrument_list = ['Bruker/OPUS (DRIFTS)', 'Horiba/LabSpec (Raman)']
 instrument = StringVar(PSD_GUI)
-instrument.set('Bruker/OPUS (DRIFTS)')
+instrument.set('Horiba/LabSpec (Raman)')
 DD_instrument = OptionMenu(PSD_GUI, instrument, *instrument_list)
 DD_instrument.config(width=25)
 DD_instrument.pack()
@@ -814,7 +881,7 @@ DD_instrument.pack()
 Label_n_sp = Label(PSD_GUI, text = 'Type in the number of spectra per period!').pack()
 
 Entry_n_sp = Entry(PSD_GUI, textvariable = Entry_n_sp)
-Entry_n_sp.insert(END,'320')
+Entry_n_sp.insert(END,'30')
 Entry_n_sp.pack()
 
 Label_cutoff_per = Label(PSD_GUI, text = 'Choose the number of periods to cut off!').pack()
