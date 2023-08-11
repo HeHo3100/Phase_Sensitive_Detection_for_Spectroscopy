@@ -33,22 +33,30 @@ Import two data sets of the same size which contain spectra of your choice and c
 ###### Input needed:
 RawData.txt, ReferenceData.txt of the same size
 ###### Output:
-FilenameOfYourRawData_TRS_Spektrum.txt
+FilenameOfYourRawData_TRS_Spectrum.txt
   
-#### peak picking:
+#### point picking:
 Imports a spectrum of your choice in which you can click on points of your choice in the spectrum to save all chosen
 energy/frequency/wavenumber/wavelength into a.txt file. After clicking for the first time and thus creating your file,
 every other click overwrites the existing file with the data points which were clicked on in the current window.
 ###### Input needed:
 RawData.txt or ProcessedData.txt (any kind of spectrum suffices)
 ###### Output:
-FilenameOfYourRawData_Banden.txt
+FilenameOfYourRawData_Peaks.txt
+
+#### baseline:
+Generates a baseline for each spectrum by connecting picked points to straights.
+###### Input needed:
+RawData.txt, ReferenceData.txt of the same size (only if you want to process modulated difference spectra, otherwise press Esc),
+FilenameOfYourRawData_Peaks.txt
+###### Output:
+FilenameOfYourRawData_Baseline.txt
   
 #### show peaks:
-Import a data set with energy/frequency/wavenumber/wavelength values (which you may create e. g. via the button 'peak
+Import a data set with energy/frequency/wavenumber/wavelength values (which you may create e. g. via the button 'point
 picking') and highlight these positions in your latest matplotlib window as red vertical lines.
 ###### Input needed:
-AnyData.txt, AnyData_Banden.txt
+AnyData.txt, AnyData_Peaks.txt
 ###### Output:
 None
   
@@ -57,9 +65,9 @@ Import a data set of PSD spectra, peak positions of your choice and the temporal
 spectra to determine for every band at which phase angle it has its maximum value. Temporal data and a correct input in the
 first textbox (number of spectra per period) is needed to calculate time values out of the maximum phase angles.
 ###### Input needed:
-PSDData.txt, AnyData_Banden.txt, RawData_t.txt, correct 'number of spectra per period' in first textbox
+PSDData.txt, AnyData_Peaks.txt, RawData_t.txt, correct 'number of spectra per period' in first textbox
 ###### Output:
-PSDData_Banden_iPW.txt
+PSDData_Peaks_iPW.txt
   
 #### show graph:
 Plots a data set of your choice.
@@ -83,6 +91,6 @@ Plots the temporal course of bands of your choice from your time resolved data i
 ###### Input needed:
 RawData.txt, ReferenceData.txt of the same size (only if you want to process modulated difference spectra, otherwise hit Esc)
 time values as a file with the same name as the raw data with the addition of _t ('FilenameOfYourRawData_t.txt') which contains
-temporal data as acolumn vector and AnyData_Banden.txt, 
+temporal data as acolumn vector and AnyData_Peaks.txt, 
 ###### Output:
 None
