@@ -84,7 +84,7 @@ def PSD_calc(): # Calculates PSD spectra
         name_dataRef = FileOpen(text)
         
         # Data of catalyst spectra and reference spectra
-        dataCat = pd.read_csv(r''+name_dataCat, sep="\t")#, header = None) # Maybe comment header = None
+        dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None) # Maybe comment header = None
         dataCat = dataCat.values
         t_inp = np.genfromtxt(r''+name_t, delimiter="\t")
         
@@ -107,7 +107,7 @@ def PSD_calc(): # Calculates PSD spectra
         name_dataRef = FileOpen(text)
         
         # Data of catalyst spectra and reference spectra
-        dataCat = pd.read_csv(r''+name_dataCat, sep="\t")#, header = None) # Maybe comment header = None
+        dataCat = pd.read_csv(r''+name_dataCat, sep="\t", header = None) # Maybe comment header = None
         dataCat = dataCat.values
         
         # Calculating t_inp into seconds
@@ -289,7 +289,7 @@ def PointPicking():
     text = 'Path of your spectra'
     name_dataSpectra = FileOpen(text)
 
-    if 'PSD' in name_dataSpectra:
+    if '_PSD_' in name_dataSpectra:
         # Data of PSD spectra
         dataSpectra = pd.read_csv(r''+name_dataSpectra, sep="\t")
         dataSpectra = dataSpectra.values
@@ -538,7 +538,7 @@ def Baseline(): # generate and substract baseline and PSD
     data_baseline = np.concatenate((Energy_values, I_bl),axis = 1) # Concatenate Energy_values and baseline back into 'data'       
     
     # Save the baseline
-                     
+                  
     if instrument.get() == "Horiba/LabSpec (Raman)":
         data_baseline = data_baseline.T
         data_baseline = np.concatenate((t_save,data_baseline),axis = 1) # Concatenate t_save and baseline_data 
