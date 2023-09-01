@@ -63,9 +63,10 @@ functions
 _______________________________________________________________________________
 '''
 
-def PSD_calc(): # Calculates PSD spectra
+def PSD_calc():
     # Number of spectra per period, periods to cut off, phase resolution and the path are input via the GUI
     
+    n_per = int(Entry_n_per.get()) # number of periods by dividing number of spectra by number of spectra per period
     n_sp = int(Entry_n_sp.get()) # Number of spectra per period
     cutoff_per = int(Entry_cutoff_per.get()) #Number of periods to cut off
     cutoff_sp = n_sp*cutoff_per # Calculated number of spectra to cut off
@@ -112,9 +113,6 @@ def PSD_calc(): # Calculates PSD spectra
         t_inp = np.delete(t_inp,np.s_[-(cutoff_sp):],axis = 0)
         
     
-    n_per = t_inp.shape[0]/n_sp # number of periods by dividing number of spectra by number of spectra per period
-    
-    
     # Averaging all periods into one period
     
     Energy_values = (data[:,0]) # Cache the energy values / wavenumbers
@@ -141,17 +139,20 @@ def PSD_calc(): # Calculates PSD spectra
     spectra = np.zeros((len(data[:,0]),len(phi)+1))
     spectra[:,0] = dataCat[:,0]
     dummy = spectra
-        
+    
+    n_harmonic = int(Entry_n_harmonic.get()) # get n_harmonic to demodulate using a higher harmonic (1, 3, 5, ...) or switch to a rectangular function (0)
+    
     # Do the fourier transformation for all predefined values of phi
     for i in range(1,len(phi)+1):
         for j in range(0,len(data[:,0])): # if your external stimulation is more like a sine or a rectangular curve, comment the respective line out / in
-            '''Maybe rework next 2 lines according to Baurecht 2001 and insert dd-menue for sine / rect.'''
-            dummy[j,i] = 2/t_inp[int(n_sp),0]*igr.trapz(data[j,1:]*np.sin(omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360)) # simple sine curve
-            # dummy[j,i] = 2/t_inp[int(n_sp),0]*igr.trapz(data[j,1:]*signal.square(omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360)) # rectangular function
-    
+            if n_harmonic == 0:
+                dummy[j,i] = 2/t_inp[int(n_sp),0]*igr.trapz(data[j,1:]*signal.square(omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360)) # rectangular function
+            else:
+                dummy[j,i] = 2/t_inp[int(n_sp),0]*igr.trapz(data[j,1:]*np.sin(n_harmonic*omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360)) # sine curve
+                
     spectra[:,1:] = spectra[:,1:]+dummy[:,1:]
     
-    # Plot spectra (if needed, uncomment it)
+    # # Plot spectra after calculation (if needed, uncomment it)
     # plt.figure()
     # for i in range(1,len(phi)+1):
     
@@ -340,7 +341,7 @@ def in_phase_angle():
     name = name[0] + '_peaks_iPW.txt'
     yesno(name, output, text)
     
-def Show_Graph(): # Plots any graph you want
+def Show_Graph():
     text = 'Path of your spectra'
     name_data = FileOpen(text)
     data = pd.read_csv(r''+name_data, sep="\t")
@@ -493,7 +494,7 @@ def course():
     name = name[0] + '_course.txt'
     yesno(name, output, text)
 
-def time_resolved(): # Plots time resolved spectra in a way not confusing. All periods are averaged into one and only 
+def time_resolved():
     text = 'Path of your spectra'
     name_data = FileOpen(text)
     data = pd.read_csv(r''+name_data, sep="\t")
@@ -537,12 +538,19 @@ _______________________________________________________________________________
 '''
 
 PSD_GUI = Tk()
+Entry_n_harmonic = StringVar()
 Entry_n_per = StringVar()
 Entry_n_sp = StringVar()
 Entry_cutoff_per = StringVar()
 Entry_dphi = StringVar()
 
 PSD_GUI.title('Have fun with PSD!')
+
+Label_n_harmonic = Label(PSD_GUI, text = 'Type in the harmonic to demodulate with \n (1, 3, 5, ... for sine or 0 for rectangular function)!').pack()
+
+Entry_n_harmonic = Entry(PSD_GUI, textvariable = Entry_n_harmonic)
+Entry_n_harmonic.insert(END,'1')
+Entry_n_harmonic.pack()
 
 Label_n_per = Label(PSD_GUI, text = 'Type in the number of periods!').pack()
 
@@ -553,7 +561,7 @@ Entry_n_per.pack()
 Label_n_sp = Label(PSD_GUI, text = 'Type in the number of spectra per period!').pack()
 
 Entry_n_sp = Entry(PSD_GUI, textvariable = Entry_n_sp)
-Entry_n_sp.insert(END,'40')
+Entry_n_sp.insert(END,'80')
 Entry_n_sp.pack()
 
 Label_cutoff_per = Label(PSD_GUI, text = 'Choose the number of periods to cut off!').pack()

@@ -2,31 +2,35 @@ https://doi.org/10.5281/zenodo.3613876
 
 A GUI with multiple features that executes Phase Sensitive Detection in Modulation Excitation Spectroscopy to get from time
 resolved data to phase resolved spectra.
-The raw data used by me were collected via DRIFT Spectroscopy but this script is applicable to all other time resolved
-spectroscopic techniques.
 
 A spectroscopic data processing tool by Jakob Weyel, Eduard-Zintl-Institut für Anorganische und Physikalische Chemie,
 TU Darmstadt
 
-For further questions feel free to contact me via mail: jakob.weyel@tu-darmstadt.de
+The raw data used by me were collected doing DRIFT Spectroscopy but this script is applicable to all other time resolved
+spectroscopic techniques, just make sure the format of your data fits the script: time resolved spectra should be stored in
+one textfile with the first column being the energy/wavenumber/wavelength/etc. values and the spectra following column-wise.
+Time values of your experiment have to be stored in a separate textfile containing a column vector.
+
+When you load data into this script, make sure that the columns are separated by tab stops.
 
 For 'plug and play' use install anaconda as your python and use spyder as I do.
 
-When you load data into this script, make sure that the columns are separated by tab stops.
+For further questions feel free to contact me via mail: jakob.weyel@tu-darmstadt.de
 
 Executing this script opens a GUI with several buttons:
 
 #### TRS->PSD:
 Reads time resolved spectral data, processes them according to PSD and saves the resulting phase resolved spectra as .txt.
 Every column of the raw data has to contain the intensity of one spectrum, the first column contains e. g. the respective
-energy/frequency/wavenumber/wavelength to do the processing correctly. Needs the correct number of spectra collected during
-one modulation period to process your data correctly (first textbox of the GUI)! The second textbox lets you decide how many
-modulation periods from the beginning are cut off. The third textbox lets you type in the desired phase resolution of your
-Output spectra in °.
+energy/frequency/wavenumber/wavelength to do the processing correctly. Needs the harmonic you want to demodulate the spectra
+with, number of periods, correct number of spectra collected during one modulation period, how many modulation periods from
+the beginning are cut off and the desired phase resolution of your output spectra in ° to process your data correctly
+(see textboxes of the GUI!!).
 ###### Input needed:
 RawData.txt, ReferenceData.txt of the same size (only if you want to process modulated difference spectra, otherwise press Esc),
 time values as a file with the same name as the raw data with the addition of _t ('FilenameOfYourRawData_t.txt') which contains
-temporal data as a column vector, correct 'number of spectra per period' in first textbox
+temporal data as a column vector, in textboxes: 'harmonic to demodulate with', 'number of periods', 'number of spectra per period',
+'phase resolution'
 ###### Output:
 FilenameOfYourRawData_PSD.txt
   
@@ -44,13 +48,13 @@ every other click overwrites the existing file with the data points which were c
 ###### Input needed:
 RawData.txt or ProcessedData.txt (any kind of spectrum suffices)
 ###### Output:
-FilenameOfYourRawData_Banden.txt
+FilenameOfYourRawData_peaks.txt
   
 #### show peaks:
 Import a data set with energy/frequency/wavenumber/wavelength values (which you may create e. g. via the button 'peak
 picking') and highlight these positions in your latest matplotlib window as red vertical lines.
 ###### Input needed:
-AnyData.txt, AnyData_Banden.txt
+AnyData.txt, AnyData_peaks.txt
 ###### Output:
 None
   
@@ -59,9 +63,9 @@ Import a data set of PSD spectra, peak positions of your choice and the temporal
 spectra to determine for every band at which phase angle it has its maximum value. Temporal data and a correct input in the
 first textbox (number of spectra per period) is needed to calculate time values out of the maximum phase angles.
 ###### Input needed:
-PSDData.txt, AnyData_Banden.txt, RawData_t.txt, correct 'number of spectra per period' in first textbox
+PSDData.txt, AnyData_peaks.txt, RawData_t.txt, in textboxes: 'number of spectra per period'
 ###### Output:
-PSDData_Banden_iPW.txt
+PSDData_peaks_iPW.txt
   
 #### show graph:
 Plots a data set of your choice.
@@ -75,7 +79,7 @@ Plots the temporal course of one whole phase resolved spectra set and links the 
 Thus the correct time vector of your raw data is needed as an ascii file as well as the correct 'number of spectra per period'
 as input for the first textbox
 ###### Input needed:
-PSDData.txt, time values of your raw data (e. g. 'FilenameOfYourRawData_t.txt') which contains temporal data as acolumn vector,
+PSDData.txt, time values of your raw data (e. g. 'FilenameOfYourRawData_t.txt') which contains temporal data as a column vector,
 correct 'number of spectra per period' in first textbox
 ###### Output:
 None
@@ -85,6 +89,14 @@ Plots the temporal course of bands of your choice from your time resolved data i
 ###### Input needed:
 RawData.txt, ReferenceData.txt of the same size (only if you want to process modulated difference spectra, otherwise hit Esc)
 time values as a file with the same name as the raw data with the addition of _t ('FilenameOfYourRawData_t.txt') which contains
-temporal data as acolumn vector and AnyData_Banden.txt, 
+temporal data as acolumn vector and AnyData_peaks.txt, 
 ###### Output:
 None
+  
+#### time resolved:
+Creates a data set of time resolved spectra in a way that's easier to plot and to digest. All periods are averaged into one
+'overall' period and only ten spectra of this period are taken.
+###### Input needed:
+RawData.txt, in textboxes: 'number of periods', 'number of spectra per period'
+###### Output:
+FilenameOfYourRawData_1period.txt
