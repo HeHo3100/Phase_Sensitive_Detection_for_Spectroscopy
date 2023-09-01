@@ -12,6 +12,8 @@ For further questions feel free to contact me via mail: jakob.weyel@tu-darmstadt
 
 For 'plug and play' use install anaconda as your python and use spyder as I do.
 
+When you load data into this script, make sure that the columns are separated by tab stops.
+
 Executing this script opens a GUI with several buttons:
 
 #### TRS->PSD:
