@@ -24,12 +24,13 @@ from tkinter import filedialog
 
 import numpy as np
 from scipy import integrate as igr
+from scipy import signal      
 import matplotlib.pyplot as plt
 import pandas as pd
 
 # The following two lines import stylesheets to format graphs. If you don't have any, comment them out
-if os.environ['LOGNAME'] == 'jakub' :
-    plt.style.use('/home/jakub/HESSENBOX-DA/Diverses/TU_Design.mplstyle')
+# if os.environ['LOGNAME'] == 'jakub' :
+#     plt.style.use('/home/jakub/HESSENBOX-DA/Diverses/TU_Design.mplstyle')
 
 '''
 _______________________________________________________________________________
@@ -62,9 +63,10 @@ functions
 _______________________________________________________________________________
 '''
 
-def PSD_calc(): # Calculates PSD spectra
+def PSD_calc():
     # Number of spectra per period, periods to cut off, phase resolution and the path are input via the GUI
     
+    n_per = int(Entry_n_per.get()) # number of periods by dividing number of spectra by number of spectra per period
     n_sp = int(Entry_n_sp.get()) # Number of spectra per period
     cutoff_per = int(Entry_cutoff_per.get()) #Number of periods to cut off
     cutoff_sp = n_sp*cutoff_per # Calculated number of spectra to cut off
@@ -111,9 +113,6 @@ def PSD_calc(): # Calculates PSD spectra
         t_inp = np.delete(t_inp,np.s_[-(cutoff_sp):],axis = 0)
         
     
-    n_per = t_inp.shape[0]/n_sp # number of periods by dividing number of spectra by number of spectra per period
-    
-    
     # Averaging all periods into one period
     
     Energy_values = (data[:,0]) # Cache the energy values / wavenumbers
@@ -141,15 +140,19 @@ def PSD_calc(): # Calculates PSD spectra
     spectra[:,0] = dataCat[:,0]
     dummy = spectra
     
+    n_harmonic = int(Entry_n_harmonic.get()) # get n_harmonic to demodulate using a higher harmonic (1, 3, 5, ...) or switch to a rectangular function (0)
+    
     # Do the fourier transformation for all predefined values of phi
-    for k in np.arange(1,2): # set k>1 for modeling a rectangular function via fourier synthesis which will be folded with the time resolved spectra
-        for i in range(1,len(phi)+1):
-            for j in range(0,len(data[:,0])):
-                dummy[j,i] = 2/t_inp[int(n_sp),0]*igr.trapz(data[j,1:]*(1/(2*k-1)**2)*np.sin((2*k-1)*omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360))
+    for i in range(1,len(phi)+1):
+        for j in range(0,len(data[:,0])): # if your external stimulation is more like a sine or a rectangular curve, comment the respective line out / in
+            if n_harmonic == 0:
+                dummy[j,i] = 2/t_inp[int(n_sp),0]*igr.trapz(data[j,1:]*signal.square(omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360)) # rectangular function
+            else:
+                dummy[j,i] = 2/t_inp[int(n_sp),0]*igr.trapz(data[j,1:]*np.sin(n_harmonic*omega*t_inp[0:n_sp,0]+phi[i-1]*2*np.pi/360)) # sine curve
                 
     spectra[:,1:] = spectra[:,1:]+dummy[:,1:]
     
-    # Plot spectra (if needed, uncomment it)
+    # # Plot spectra after calculation (if needed, uncomment it)
     # plt.figure()
     # for i in range(1,len(phi)+1):
     
@@ -338,7 +341,7 @@ def in_phase_angle():
     name = name[0] + '_peaks_iPW.txt'
     yesno(name, output, text)
     
-def Show_Graph(): # Plots any graph you want
+def Show_Graph():
     text = 'Path of your spectra'
     name_data = FileOpen(text)
     data = pd.read_csv(r''+name_data, sep="\t")
@@ -346,26 +349,6 @@ def Show_Graph(): # Plots any graph you want
     
     # Plot all spectra at once
     plt.figure()
-    
-    # # Averaging all periods into one
-    # n_sp = int(Entry_n_sp.get()) # Number of spectra per period
-    # n_per = 20 # Number of periods
-    # Energy_values = (data[:,0]) # Cache the energy values / wavenumbers
-    # Energy_values = np.reshape(Energy_values,(Energy_values.size,1)) # Make 2D array for further computations
-    # spectra_per = np.split(data[:,1:], n_per, axis = 1) # Split the wholeness of all spectra in 'data' into minor ndarrays for each period
-    # sum_spectra_per = np.divide(sum(spectra_per),n_per) # sum up all cells of the created ndarrays that have the same index and divide by the number of periods
-    # data = np.concatenate((Energy_values, sum_spectra_per[:,::int(n_sp/10)]),axis = 1) # Concatenate Energy_values and every tenth averaged spectra back into 'data'
-    
-    # # Put stuff into data frame
-    # output = pd.DataFrame(data = data[:,:], columns = None)
-    
-    # print(output)
-    
-    # # Save spectra
-    # text = 'Shall the PSD spectra be saved as .txt?'
-    # name = name_data.split('.')
-    # name = name[0] + '_1period.txt'
-    # yesno(name, output, text)
     
     #plot graph
     plt.plot(data[:,0],data[:,1:])
@@ -378,13 +361,16 @@ def Show_Graph(): # Plots any graph you want
     plt.ylim(np.amin(data[:,1:]), np.amax(data[:,1:]))
     plt.xlim(np.amin(data[:,0]), np.amax(data[:,0]))
     
+    # comment in to have some type of legend for phase angles of PSD spectra
     # phi = np.arange(0,360,30)
-    # # plt.legend(phi, title = r'$\varphi$ / °', loc = 'upper right') # legend inside frame
+    # plt.legend(phi, title = r'$\varphi$ / °', loc = 'upper right') # legend inside frame
     # plt.legend(phi, title = r'$\varphi$ / °', loc = 'upper right', bbox_to_anchor=(1.12,1)) # legend outside frame
     
     return
 
 def contour():
+    
+    '''Does anyone actually use this? -> may be removed in a future version'''
     
     text = 'Path of your PSD spectra'
     name_psd = FileOpen(text)
@@ -488,10 +474,11 @@ def course():
         dummy = np.where(data[:,0] == peaks[i])
         pos[i] = dummy[0]
         
-        plt.plot(t_inp[:,0]/60,data[int(pos[i]),1:], label = str(np.around(peaks[i],0)))
+        plt.plot(t_inp[:,0]/60,data[int(pos[i]),1:], label = str(int(np.around(peaks[i],0))))
         plt.legend(title = xUnit_list[xUnit.get()], loc='upper right')
         plt.xlabel('$t$ / min')
         plt.ylabel(yUnit_list[yUnit.get()]) # Gets y axis label
+        plt.xlim(np.amin(t_inp[:,0]/60), np.amax(t_inp[:,0]/60))
    
     # Write sth. to save output as txt
     output1 = pd.DataFrame({'t / min': t_inp[:,0]/60})
@@ -506,7 +493,44 @@ def course():
     name = name_dataCat.split('.') #Will be used as filename
     name = name[0] + '_course.txt'
     yesno(name, output, text)
-            
+
+def time_resolved():
+    text = 'Path of your spectra'
+    name_data = FileOpen(text)
+    data = pd.read_csv(r''+name_data, sep="\t")
+    data = data.values
+    
+    # Averaging all periods into one
+    n_per = int(Entry_n_per.get()) # Number of periods
+    n_sp = int(Entry_n_sp.get()) # Number of spectra per period
+    Energy_values = (data[:,0]) # Cache the energy values / wavenumbers
+    Energy_values = np.reshape(Energy_values,(Energy_values.size,1)) # Make 2D array for further computations
+    spectra_per = np.split(data[:,1:], n_per, axis = 1) # Split the wholeness of all spectra in 'data' into minor ndarrays for each period
+    sum_spectra_per = np.divide(sum(spectra_per),n_per) # sum up all cells of the created ndarrays that have the same index and divide by the number of periods
+    data = np.concatenate((Energy_values, sum_spectra_per[:,::int(n_sp/10)]),axis = 1) # Concatenate Energy_values and every tenth averaged spectra back into 'data'
+    
+    # Put stuff into data frame
+    output = pd.DataFrame(data = data[:,:], columns = None)
+    
+    # Save spectra
+    text = 'Shall the PSD spectra be saved as .txt?'
+    name = name_data.split('.')
+    name = name[0] + '_1period.txt'
+    yesno(name, output, text)
+    
+    #plot graph after calculation if wanted
+    # plt.plot(data[:,0],data[:,1:])
+    
+    # # grabs x and y units for graph 
+    # plt.xlabel(xUnit_list[xUnit.get()]) # Gets x axis label
+    # plt.ylabel(yUnit_list[yUnit.get()]) # Gets y axis label
+    
+    # # plt.yticks([],[])
+    # plt.ylim(np.amin(data[:,1:]), np.amax(data[:,1:]))
+    # plt.xlim(np.amin(data[:,0]), np.amax(data[:,0]))
+    
+    return
+
 '''
 _______________________________________________________________________________
 GUI stuff
@@ -514,16 +538,30 @@ _______________________________________________________________________________
 '''
 
 PSD_GUI = Tk()
+Entry_n_harmonic = StringVar()
+Entry_n_per = StringVar()
 Entry_n_sp = StringVar()
 Entry_cutoff_per = StringVar()
 Entry_dphi = StringVar()
 
 PSD_GUI.title('Have fun with PSD!')
 
+Label_n_harmonic = Label(PSD_GUI, text = 'Type in the harmonic to demodulate with \n (1, 3, 5, ... for sine or 0 for rectangular function)!').pack()
+
+Entry_n_harmonic = Entry(PSD_GUI, textvariable = Entry_n_harmonic)
+Entry_n_harmonic.insert(END,'1')
+Entry_n_harmonic.pack()
+
+Label_n_per = Label(PSD_GUI, text = 'Type in the number of periods!').pack()
+
+Entry_n_per = Entry(PSD_GUI, textvariable = Entry_n_per)
+Entry_n_per.insert(END,'20')
+Entry_n_per.pack()
+
 Label_n_sp = Label(PSD_GUI, text = 'Type in the number of spectra per period!').pack()
 
 Entry_n_sp = Entry(PSD_GUI, textvariable = Entry_n_sp)
-Entry_n_sp.insert(END,'40')
+Entry_n_sp.insert(END,'80')
 Entry_n_sp.pack()
 
 Label_cutoff_per = Label(PSD_GUI, text = 'Choose the number of periods to cut off!').pack()
@@ -556,10 +594,11 @@ DD_xUnit = OptionMenu(PSD_GUI, xUnit, *xUnit_list)
 DD_xUnit.config(width=22)
 DD_xUnit.pack()
 
+Label_PSD_calc = Label(PSD_GUI, text = 'Calculate PSD spectra from time resolved ones:').pack()
 
 Bt_PSD_calc = Button(PSD_GUI, text = 'TRS -> PSD', command = PSD_calc).pack()
 
-Label_PeakPicking = Label(PSD_GUI, text = 'If no graph is shown, close all tkinter windows except your graph! \n If a data point is clicked on, all data points \n clicked on until now are written into a file:').pack()
+Label_PeakPicking = Label(PSD_GUI, text = 'If no graph is shown, resize the window! \n If a data point is clicked on, all data points \n clicked on until now are written into a file:').pack()
 
 Bt_PeakPicking = Button(PSD_GUI, text = 'peak picking', command = PeakPicking).pack()
 
@@ -586,6 +625,10 @@ Bt_contour = Button(PSD_GUI, text = 'contour plot', command = contour).pack()
 Label_course = Label(PSD_GUI, text = 'Create course plots of chosen spectra at chosen peak positions:').pack()
 
 Bt_course = Button(PSD_GUI, text = 'course plot', command = course).pack()
+
+Label_time_resolved = Label(PSD_GUI, text = 'Write every tenth spectrum of one average period into a file:').pack()
+
+Bt_time_resolved = Button(PSD_GUI, text = 'create time resolved', command = time_resolved).pack()
 
 
 
