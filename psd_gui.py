@@ -29,8 +29,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # The following two lines import stylesheets to format graphs. If you don't have any, comment them out
-# if os.environ['LOGNAME'] == 'jakub' :
-#     plt.style.use('/home/jakub/HESSENBOX-DA/Diverses/TU_Design.mplstyle')
+if os.environ['LOGNAME'] == 'jakub' :
+    plt.style.use('/home/jakub/HESSENBOX-DA/Diverses/TU_Design.mplstyle')
 
 '''
 _______________________________________________________________________________
@@ -66,11 +66,12 @@ _______________________________________________________________________________
 def PSD_calc():
     # Number of spectra per period, periods to cut off, phase resolution and the path are input via the GUI
     
-    n_per = int(Entry_n_per.get()) # number of periods by dividing number of spectra by number of spectra per period
+    
     n_sp = int(Entry_n_sp.get()) # Number of spectra per period
     cutoff_per = int(Entry_cutoff_per.get()) #Number of periods to cut off
     cutoff_sp = n_sp*cutoff_per # Calculated number of spectra to cut off
     dphi = int(Entry_dphi.get()) # Phasse resolution
+    n_per = int(Entry_n_per.get())-cutoff_per # number of periods that will be processed
     
     text = 'Path of your catalyst spectra'
     name_dataCat = FileOpen(text)
