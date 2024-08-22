@@ -1,102 +1,104 @@
 https://doi.org/10.5281/zenodo.3613876
 
-A GUI with multiple features that executes Phase Sensitive Detection in Modulation Excitation Spectroscopy to get from time
-resolved data to phase resolved spectra.
+A GUI with multiple features that executes Phase Sensitive Detection (PSD) in Modulation Excitation Spectroscopy (MES) to get from
+time-resolved data to phase-resolved spectra.
 
-A spectroscopic data processing tool by Jakob Weyel, Eduard-Zintl-Institut für Anorganische und Physikalische Chemie,
-TU Darmstadt
+A spectroscopic data processing tool by Henrik Hoyer, Eduard-Zintl-Institut für Anorganische und Physikalische Chemie, TU Darmstadt
+Originally by Jakob Weyel, formerly Eduard-Zintl-Institut für Anorganische und Physikalische Chemie, TU Darmstadt
 
-The raw data used by me were collected doing DRIFT Spectroscopy but this script is applicable to all other time resolved
-spectroscopic techniques, just make sure the format of your data fits the script: time resolved spectra should be stored in
-one textfile with the first column being the energy/wavenumber/wavelength/etc. values and the spectra following column-wise.
-Time values of your experiment have to be stored in a separate textfile containing a column vector.
+The raw data used by me were collected doing DRIFT Spectroscopy (Bruker, OPUS software),
+Raman spectroscopy (Horiba Jobin Yvon, LabSpec6 software) and UV-Vis spectroscopy (Avantes, AvaSoft software),
+but this script is applicable to all other time-resolved spectroscopic techniques.
+Just make sure the format of your data fits the script.
 
-When you load data into this script, make sure that the columns are separated by tab stops.
+For 'plug and play' use install anaconda as your python and use spyder as I do. I recommend to set your
+graphics backend to 'Automatic 'for functions such as 'PointPicking' and 'Show_Points' to work properly.
 
-For 'plug and play' use install anaconda as your python and use spyder as I do.
-
-For further questions feel free to contact me via mail: jakob.weyel@tu-darmstadt.de
+For further questions feel free to contact me via mail: henrik.hoyer@tu-darmstadt.de
 
 Executing this script opens a GUI with several buttons:
 
-#### TRS->PSD:
-Reads time resolved spectral data, processes them according to PSD and saves the resulting phase resolved spectra as .txt.
-Every column of the raw data has to contain the intensity of one spectrum, the first column contains e. g. the respective
-energy/frequency/wavenumber/wavelength to do the processing correctly. Needs the harmonic you want to demodulate the spectra
-with, number of periods, correct number of spectra collected during one modulation period, how many modulation periods from
-the beginning are cut off and the desired phase resolution of your output spectra in ° to process your data correctly
-(see textboxes of the GUI!!).
+#### PSD:
+Reads time-resolved spectral data, processes them according to PSD and saves the resulting phase-resolved spectra as .txt.
+Needs the correct spectroscopy type, number of spectra collected during one modulation period, number of periods you want to process
+(choose 1 if the data are already averaged), how many modulation periods from the beginning are cut off, the desired phase resolution
+of your output spectra in ° and the harmonic you want to demodulate the spectra with to process your data correctly
+(see textboxes of the GUI!!). For Raman spectroscopy, choose if you want to have cosmic ray spikes removed and your data normalized.
+The time-resolved raw data has to have the following format:
+####### DRIFT spectroscopy: according to OPUS by Bruker
+Every column of the raw data has to contain the intensity of one spectrum, the first column contains the respective wavenumber.
+Tap stops as seperator. An extra file with time values in a column vector is required.
+####### Raman spectroscopy: according to LabSpec6 by Horiba Jobin Yvon
+Every column of the raw data has to contain the intensity of one spectrum, the first line contains the respective Raman shift
+and the first column contains the time values. Tap stops as seperator.
+####### UV-Vis spectroscopy: according to AvaSoft by Avantes
+Every column of the raw data has to contain the intensity of one spectrum, the first column contains the respective wavelength
+and the first line contains the time values. ';' as seperator.
+####### Already averaged spectra (independebnt from sprectroscopy type):
+Every column of the raw data has to contain the intensity of one spectrum, the first column contains the respective
+wavenumber/Raman shift/wavelength and the first line contains the time values. Tap stops as seperator.
 ###### Input needed:
-RawData.txt, ReferenceData.txt of the same size (only if you want to process modulated difference spectra, otherwise press Esc),
-time values as a file with the same name as the raw data with the addition of _t ('FilenameOfYourRawData_t.txt') which contains
-temporal data as a column vector, in textboxes: 'harmonic to demodulate with', 'number of periods', 'number of spectra per period',
-'phase resolution'
+RawData.txt, (for DRIFTS: time values as a file with the same name as the raw data with the addition of _t ('FilenameOfYourRawData_t.txt')
+which contains temporal data as a column vector), in textboxes: 'spectroscopy type', 'number of spectra per period', 'number of periods',
+'number of periods to cut off', 'phase resolution', 'harmonic to demodulate with', for Raman: 'spike removing' and 'normalization'
 ###### Output:
 FilenameOfYourRawData_PSD.txt
-  
-#### difference spectra:
-Import two data sets of the same size which contain spectra of your choice and calculate their difference (Spectrum1-Spectrum2)
+
+#### TRS Averaging:
+Creates a data set of time-resolved spectra. All periods are averaged into one 'overall' period without doing PSD (the averaging is done
+automatically in the 'PSD' function.
 ###### Input needed:
-RawData.txt, ReferenceData.txt of the same size
+RawData.txt, in textboxes: 'spectroscopy type', 'number of spectra per period', 'number of periods', 'number of periods to cut off',
+for Raman: 'spike removing' and 'normalization'
 ###### Output:
-FilenameOfYourRawData_TRS_Spektrum.txt
-  
-#### peak picking:
+FilenameOfYourRawData_averaged.txt
+
+#### point picking:
 Imports a spectrum of your choice in which you can click on points of your choice in the spectrum to save all chosen
-energy/frequency/wavenumber/wavelength into a.txt file. After clicking for the first time and thus creating your file,
+wavenumber/Raman shift/wavelength into a .txt file. After clicking for the first time and thus creating your file,
 every other click overwrites the existing file with the data points which were clicked on in the current window.
 ###### Input needed:
-RawData.txt or ProcessedData.txt (any kind of spectrum suffices)
+RawData.txt or ProcessedData.txt (any kind of spectrum suffices), in textboxes: 'spectroscopy type'
 ###### Output:
-FilenameOfYourRawData_peaks.txt
-  
-#### show peaks:
-Import a data set with energy/frequency/wavenumber/wavelength values (which you may create e. g. via the button 'peak
-picking') and highlight these positions in your latest matplotlib window as red vertical lines.
+FilenameOfYourRawData_points.txt
+
+#### in-phase angle:
+Import a data set of PSD spectra, peak positions of your choice and the averaged data related to your PSD for the time values to
+determine for every band at which phase angle it has its maximum value, i.e., the in-hase angle.
 ###### Input needed:
-AnyData.txt, AnyData_peaks.txt
+PSDData.txt, AnyData_points.txt, AveragedData.txt, in textboxes: 'spectroscopy type'
 ###### Output:
-None
-  
-#### in phase angle:
-Import a data set of PSD spectra, peak positions of your choice and the temporal data of your raw data related to your PSD
-spectra to determine for every band at which phase angle it has its maximum value. Temporal data and a correct input in the
-first textbox (number of spectra per period) is needed to calculate time values out of the maximum phase angles.
+PSDData_points_iPW.txt
+
+#### difference spectra:
+Import two averaged data sets of the same size which contain spectra of your choice and calculate their difference (Spectrum1-Spectrum2)
 ###### Input needed:
-PSDData.txt, AnyData_peaks.txt, RawData_t.txt, in textboxes: 'number of spectra per period'
+AveragedData.txt, AveragedReferenceData.txt of the same size, in textboxes: 'spectroscopy type'
 ###### Output:
-PSDData_peaks_iPW.txt
-  
-#### show graph:
-Plots a data set of your choice.
+FilenameOfYourAveragedData_Difference.txt
+
+#### show points:
+Import a data set with wavenumber/Raman shift/wavelength values (which you may create e. g. via the button 'point picking')
+and highlight these positions in your latest matplotlib window as red vertical lines.
 ###### Input needed:
-AnyData.txt
+AnyData.txt, AnyData_points.txt
 ###### Output:
 None
 
-#### contour plot:
-Plots the temporal course of one whole phase resolved spectra set and links the appearance of bands with the time of one period.
-Thus the correct time vector of your raw data is needed as an ascii file as well as the correct 'number of spectra per period'
-as input for the first textbox
+#### show graph:
+Plots a data set of your choice.
 ###### Input needed:
-PSDData.txt, time values of your raw data (e. g. 'FilenameOfYourRawData_t.txt') which contains temporal data as a column vector,
-correct 'number of spectra per period' in first textbox
+AnyData.txt, in textboxes: 'spectroscopy type'
 ###### Output:
 None
-  
+
 #### course plot:
-Plots the temporal course of bands of your choice from your time resolved data in 2D I vs t diagram.
+Plots the temporal course of bands of your choice from your time-resolved data in 2D I vs t diagram.
 ###### Input needed:
-RawData.txt, ReferenceData.txt of the same size (only if you want to process modulated difference spectra, otherwise hit Esc)
-time values as a file with the same name as the raw data with the addition of _t ('FilenameOfYourRawData_t.txt') which contains
-temporal data as acolumn vector and AnyData_peaks.txt, 
+RawData.txt (for DRIFTS: time values as a file with the same name as the raw data with the addition of _t ('FilenameOfYourRawData_t.txt'))
+and AnyData_points.txt, in textboxes: 'spectroscopy type', 'number of spectra per period', 'number of periods' (choose 1 for averaged spectra),
+'number of periods to cut off', for Raman: 'spike removing'
 ###### Output:
-None
+Courses.txt
   
-#### time resolved:
-Creates a data set of time resolved spectra in a way that's easier to plot and to digest. All periods are averaged into one
-'overall' period and only ten spectra of this period are taken.
-###### Input needed:
-RawData.txt, in textboxes: 'number of periods', 'number of spectra per period'
-###### Output:
-FilenameOfYourRawData_1period.txt
+

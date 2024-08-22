@@ -6,8 +6,8 @@ Anorganische und Physikalische Chemie, TU Darmstadt
 Edited since April 8 2024 by Henrik Hoyer, Eduard-Zintl-Institut für
 Anorganische und Physikalische Chemie, TU Darmstadt
 
-Make sure that your graphics backend is set to 'Tkinter' for functions such as
-'PointPicking' and 'Show_Points'.
+I recommend that your graphics backend is set to 'Automatic' for functions such as
+'PointPicking' and 'Show_Points' to work properly.
 
 If want, you can include a fourier series of your choice (change the parameter
 k as you like) in 'PSD_calc' instead of a simple sin function to describe the
@@ -661,6 +661,7 @@ def course():
     points = np.sort(points) # sort points in ascending order
     
     
+    # converts the DRIFTS data (OPUS, Bruker) into the right format
     if spectro.get() == "DRIFTS" and n_per != 1:
         
         # data set (wavenumber in first column; each column is one spectrum)
@@ -679,7 +680,8 @@ def course():
     
         data = np.delete(data, 0, axis=1) # delete energy values from data
         
-
+    
+    # converts the Raman data (labSpec6, Horiba Jobin Yvon) into the right format
     elif spectro.get() == "Raman" and n_per != 1:
         
         # data set (time values in first column; Raman shift in first row; each row is one spectrum)
@@ -710,7 +712,8 @@ def course():
                     if data[j,i] > spike_factor*data[j,i-1] and data[j,i] > spike_factor*data[j,i+1]:
                         data[j,i] = (data[j,i-1]+data[j,i+1])/2
 
-        
+    
+    # converts the UV-Vis data (AvaSoft, Avantes) into the right format   
     elif spectro.get() == "UV-Vis" and n_per != 1:
         
         # data set (time values in first row; wavelength in first column; each column is one spectrum)
@@ -731,7 +734,8 @@ def course():
         data = np.delete(data, [0,1,2], axis=1) # delete energy values from data
         data = np.delete(data, 0, axis=0) # delete time values from data
         data = data.astype(float)
-        
+    
+    # for the case that already averaged spectra are used
     elif n_per == 1:
         
         # data set (time values in first row; energy values in first row; each column is one spectrum)
@@ -1168,7 +1172,7 @@ Label_PointPicking = Label(frame_right, text = 'If a data point is clicked on, a
 Bt_PointPicking = Button(frame_right, text = 'point picking', command = PointPicking).pack()
 
 Label_in_phase_angle = Label(frame_right, text = 'Calculate in-phase angle and in-phase time:').pack()
-Bt_in_phase_angle = Button(frame_right, text = 'in phase angle', command = in_phase_angle).pack()
+Bt_in_phase_angle = Button(frame_right, text = 'in-phase angle', command = in_phase_angle).pack()
 
 Label_Spectra_diff = Label(frame_right, text = 'Here you calculate difference spectra:').pack()
 Bt_Spectra_diff = Button(frame_right, text = 'difference spectra', command = Spectra_diff).pack()
@@ -1184,90 +1188,6 @@ Bt_Show_Points = Button(frame_right, text = 'show points', command = Show_Points
 
 Label_course = Label(frame_right, text = 'Create course plots of chosen spectra at chosen point positions:').pack()
 Bt_course = Button(frame_right, text = 'course plot', command = course).pack()
-
-
-
-
-
-
-# Label_DD_spectro = Label(PSD_GUI, text = 'Choose the spectroscopy type!').pack()
-# spectro_list = ['DRIFTS', 'Raman', 'UV-Vis']
-# spectro = StringVar(PSD_GUI)
-# spectro.set('DRIFTS')
-# DD_spectro = OptionMenu(PSD_GUI, spectro, *spectro_list)
-# DD_spectro.pack()
-
-# Label_n_sp = Label(PSD_GUI, text = 'Type in the number of spectra per period!').pack()
-# Entry_n_sp = StringVar()
-# Entry_n_sp = Entry(PSD_GUI, textvariable = Entry_n_sp)
-# Entry_n_sp.insert(END,'0')
-# Entry_n_sp.pack()
-
-# Label_n_per = Label(PSD_GUI, text = 'Type in the number of periods!').pack()
-# Entry_n_per = StringVar()
-# Entry_n_per = Entry(PSD_GUI, textvariable = Entry_n_per)
-# Entry_n_per.insert(END,'0')
-# Entry_n_per.pack()
-
-# Label_cutoff_per = Label(PSD_GUI, text = 'Choose the number of periods to cut off!').pack()
-# Entry_cutoff_per = StringVar()
-# Entry_cutoff_per = Entry(PSD_GUI, textvariable = Entry_cutoff_per)
-# Entry_cutoff_per.insert(END,'0')
-# Entry_cutoff_per.pack()
-
-# Label_dphi = Label(PSD_GUI, text = 'Choose your phase resolution!').pack()
-# Entry_dphi = StringVar()
-# Entry_dphi = Entry(PSD_GUI, textvariable = Entry_dphi)
-# Entry_dphi.insert(END,'30')
-# Entry_dphi.pack()
-
-# Label_k_harmonic = Label(PSD_GUI, text = 'Type in the harmonic to demodulate with \n (1, 3, 5, ... for sine or 0 for rectangular function)!').pack()
-# Entry_k_harmonic = StringVar()
-# Entry_k_harmonic = Entry(PSD_GUI, textvariable = Entry_k_harmonic)
-# Entry_k_harmonic.insert(END,'1')
-# Entry_k_harmonic.pack()
-
-# Label_SpikeRemoving = Label(PSD_GUI, text = 'Do you want to remove cosmic ray spikes?').pack()
-# Entry_spike_rem = IntVar(PSD_GUI)
-# Entry_spike_rem.set(value=1)
-# Box_SpikeRemoving = Checkbutton(PSD_GUI, text = 'spike removing', variable=Entry_spike_rem, onvalue=1, offvalue=0)
-# Box_SpikeRemoving.pack()
-
-# Label_Normalization = Label(PSD_GUI, text = 'Do you want to normalize the data?').pack()
-# Entry_norm = IntVar(PSD_GUI)
-# Entry_norm.set(value=1)
-# Box_Normalization = Checkbutton(PSD_GUI, text = 'normalization', variable=Entry_norm, onvalue=1, offvalue=0)
-# Box_Normalization.pack()
-
-# Label_PSD_calc = Label(PSD_GUI, text = 'Calculate PSD spectra from time resolved ones:').pack()
-# Bt_PSD_calc = Button(PSD_GUI, text = 'PSD', command = PSD_calc).pack()
-
-# Label_time_resolved = Label(PSD_GUI, text = 'Average the TRS into one period:').pack()
-# Bt_time_resolved = Button(PSD_GUI, text = 'TRS Averaging', command = time_resolved).pack()
-
-# Label_PointPicking = Label(PSD_GUI, text = 'If no graph is shown, resize the window! \n If a data point is clicked on, all data points \n clicked on until now are written into a file:').pack()
-# Bt_PointPicking = Button(PSD_GUI, text = 'point picking', command = PointPicking).pack()
-
-# Label_in_phase_angle = Label(PSD_GUI, text = 'Calculate in phase angle and in phase time:').pack()
-# Bt_in_phase_angle = Button(PSD_GUI, text = 'in phase angle', command = in_phase_angle).pack()
-
-# Label_Spectra_diff = Label(PSD_GUI, text = 'Here you calculate difference spectra:').pack()
-# Bt_Spectra_diff = Button(PSD_GUI, text = 'difference spectra', command = Spectra_diff).pack()
-
-# Label_Baseline = Label(PSD_GUI, text = 'Here you gernerate baselines:').pack()
-# Bt_Baseline = Button(PSD_GUI, text = 'baseline', command = Baseline).pack()
-
-# Label_Show_Graph = Label(PSD_GUI, text = 'Plot graphs you like:').pack()
-# Bt_Show_Graph = Button(PSD_GUI, text = 'show graph', command = Show_Graph).pack()
-
-# Label_Show_Points = Label(PSD_GUI, text = 'here you can highlight chosen point positions:').pack()
-# Bt_Show_Points = Button(PSD_GUI, text = 'show points', command = Show_Points).pack()
-
-# Label_course = Label(PSD_GUI, text = 'Create course plots of chosen spectra at chosen point positions:').pack()
-# Bt_course = Button(PSD_GUI, text = 'course plot', command = course).pack()
-
-
-
 
 
 
