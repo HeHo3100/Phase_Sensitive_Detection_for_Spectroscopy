@@ -227,9 +227,9 @@ def PSD_calc():
     for i in range(0,len(phi)):
         for j in range(0,len(data)): # if your external stimulation is more like a sine or a rectangular curve, comment the respective line out / in
             if k_harmonic == 0:
-                data_psd[j,i] = 2/t_per*igr.trapz(data[j,:]*signal.square(omega*t_inp[:n_sp,0]+phi[i-1]*2*np.pi/360), x=t_inp[:n_sp,0]) # rectangular function
+                data_psd[j,i] = 2/t_per*igr.trapz(data[j,:]*signal.square(omega*t_inp[:n_sp,0]+phi[i]*2*np.pi/360), x=t_inp[:n_sp,0]) # rectangular function
             else:
-                data_psd[j,i] = 2/t_per*igr.trapz(data[j,:]*np.sin(k_harmonic*omega*t_inp[:n_sp,0]+phi[i-1]*2*np.pi/360), x=t_inp[:n_sp,0]) # sine curve
+                data_psd[j,i] = 2/t_per*igr.trapz(data[j,:]*np.sin(k_harmonic*omega*t_inp[:n_sp,0]+phi[i]*2*np.pi/360), x=t_inp[:n_sp,0]) # sine curve
     
     data_psd = np.concatenate((energy_values, data_psd),axis = 1) # concatenate energy values and PSD spectra
     
