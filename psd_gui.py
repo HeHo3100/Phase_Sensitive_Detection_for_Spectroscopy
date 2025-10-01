@@ -223,13 +223,14 @@ def PSD_calc():
     k_harmonic = int(Entry_k_harmonic.get()) # demodulation index to demodulate using a higher harmonic (1, 3, 5, ...) or a rectangular function (0)
     
     # phase sensitive detection for all predefined values of
-    data_psd = np.zeros((len(data),len(phi)))
+    funct_periodic = np.zeros((n_sp,len(phi))) # array for periodic function (sine/rectangular)
     for i in range(0,len(phi)):
-        for j in range(0,len(data)): # if your external stimulation is more like a sine or a rectangular curve, comment the respective line out / in
-            if k_harmonic == 0:
-                data_psd[j,i] = 2/t_per*igr.trapezoid(data[j,:]*signal.square(omega*t_inp[:n_sp,0]+phi[i]*2*np.pi/360), x=t_inp[:n_sp,0]) # rectangular function
-            else:
-                data_psd[j,i] = 2/t_per*igr.trapezoid(data[j,:]*np.sin(k_harmonic*omega*t_inp[:n_sp,0]+phi[i]*2*np.pi/360), x=t_inp[:n_sp,0]) # sine curve
+        if k_harmonic == 0:
+            funct_periodic[:,i] = signal.square(omega*t_inp[:n_sp,0]+phi[i]*2*np.pi/360) # rectangular function
+        else:
+            funct_periodic[:,i] = np.sin(k_harmonic*omega*t_inp[:n_sp,0]+phi[i]*2*np.pi/360) # sine curve
+
+    data_psd = pd.DataFrame(2/(n_sp-1) * data @ funct_periodic) # PSD using matrix multiplication
     
     data_psd = np.concatenate((energy_values, data_psd),axis = 1) # concatenate energy values and PSD spectra
     
