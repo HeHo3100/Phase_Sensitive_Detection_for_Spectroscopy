@@ -198,10 +198,15 @@ def PSD_calc():
 
     # normalize all averaged spectra to the single highest peak
     if spectro.get() == "Raman" and Entry_norm.get() == 1:
-        I_max = np.max(data)
-        # print("I_max = " + str(I_max)) # print the highest intensity to normalize other ranges
-        data = data/I_max
+        if Entry_value_norm.get() == "max" or Entry_value_norm.get() == "":
+            I_max = np.max(data)
+            print("I_max = " + str(I_max)) # print the highest intensity to normalize other ranges
+            data = data/I_max
+        else:
+            norm_value = float(Entry_value_norm.get())
+            data = data/norm_value
         
+    
     # only for data that were not averaged before (for saving)
     if n_per != 1:
         data_avg = np.concatenate((energy_values, data), axis=1) # concatenate energy values and averaged spectra
@@ -917,9 +922,13 @@ def time_resolved(): # averaging of TRS
 
     # normalize all averaged spectra to the single highest peak
     if spectro.get() == "Raman" and Entry_norm.get() == 1:
-        I_max = np.max(data)
-        # print("I_max = " + str(I_max)) # print the highest intensity to normalize other ranges
-        data = data/I_max
+        if Entry_value_norm.get() == "max" or Entry_value_norm.get() == "":
+            I_max = np.max(data)
+            print("I_max = " + str(I_max)) # print the highest intensity to normalize other ranges
+            data = data/I_max
+        else:
+            norm_value = float(Entry_value_norm.get())
+            data = data/norm_value
     
     data = np.concatenate((energy_values, data), axis=1) # concatenate energy values and averaged spectra
 
@@ -1153,6 +1162,12 @@ Entry_norm = IntVar(PSD_GUI)
 Entry_norm.set(value=1)
 Box_Normalization = Checkbutton(frame_left, text = 'normalization', variable=Entry_norm, onvalue=1, offvalue=0)
 Box_Normalization.pack()
+
+Label_value_norm = Label(frame_left, text = 'Normalize to...').pack()
+Entry_value_norm = StringVar()
+Entry_value_norm = Entry(frame_left, textvariable = Entry_value_norm)
+Entry_value_norm.insert(END,'max')
+Entry_value_norm.pack()
 
 Label_PSD_calc = Label(frame_right, text = 'Calculate PSD spectra from time-resolved spectra (TRS):').pack()
 Bt_PSD_calc = Button(frame_right, text = 'PSD', command = PSD_calc).pack()
