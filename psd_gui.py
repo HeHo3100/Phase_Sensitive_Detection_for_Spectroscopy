@@ -494,31 +494,22 @@ def in_phase_angle():
     
     t_max = (360-w_max)/360*t_per # convert phase angle at maximum into time at maximum
     
-    # generate negative t_max if intensity reaches maximum in second half of period
-    t_max_neg = t_max - t_max + t_max # like this, t_max and t_max_neg are not connected in further computation
-    for i in range(len(t_max_neg)):
-        if t_max[i] > t_per/2:
-            t_max_neg[i] = -(t_max[i] - t_per/2)
-    
     # round wavenumbers and time values to one decimal and put all into data frame
     point_pos = np.around(point_pos,1)
     t_max_round = np.around(t_max,1)
-    t_max_neg_round = np.around(t_max_neg,1)
-    #output = pd.DataFrame({x_unit: point_pos, 'phi_max / °': w_max, 't / s with t_per = '+str(t_per)+' s': t_max_round})
-    output = pd.DataFrame({x_unit: point_pos, 'phi_max / °': w_max, 't / s with t_per = '+str(t_per)+' s': t_max_round, '(-) t / s': t_max_neg_round})
+    output = pd.DataFrame({x_unit: point_pos, 'phi_max / °': w_max, 't / s with t_per = '+str(t_per)+' s': t_max_round})
+    
     # save in phase angles and t_max
     text = 'Shall the in phase angles be saved as .txt?'
-    # name = name_psd.split('.')
-    # name = name[0] + '_points_iPW.txt'
     yesno(name, output, text)
     
 
     # plot the time constants
     plt.figure(figsize=(10,5))
     if len(point_pos) > 100: # if more than xxx time constants plot as connected lines
-        plt.plot(point_pos, t_max_neg)
+        plt.plot(point_pos, t_max)
     else: # else plot as dots
-        plt.plot(point_pos, t_max_neg, 'o')
+        plt.plot(point_pos, t_max, 'o')
     plt.xlabel(x_unit) # get x axis label
     plt.ylabel('$t$ / s') # get y axis label
 
@@ -624,9 +615,9 @@ def Show_Graph():
             plt.figure(figsize=(10,5))
             
             if len(data) > 100: # if more than xxx time constants plot as connected lines
-                plt.plot(data[:,0], data[:,3])
+                plt.plot(data[:,0], data[:,2])
             else: # else plot as dots
-                plt.plot(data[:,0], data[:,3], 'o')
+                plt.plot(data[:,0], data[:,2], 'o')
             plt.xlabel(x_unit) # get x axis label
             plt.ylabel('$t$ / s') # get y axis label
             
