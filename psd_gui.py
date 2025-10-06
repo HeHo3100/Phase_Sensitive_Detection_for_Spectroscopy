@@ -1078,19 +1078,34 @@ def Baseline():
     name = name[0] + '_baseline.txt'
     yesno(name, output, text)
        
+    
     # plot the the last spectrum of the first gasphase and the corresponding baseline and difference spectrum
     plt.figure(figsize=(10,5))
+    plt.title('Last spectrum 1st half period')
     plt.xlabel(x_unit) # get x axis label
     plt.ylabel(y_unit) # get y axis label
     #plt.ylim(np.amin(data[1:,1:]), np.amax(data[1:,1:]))
     plt.xlim(np.amin(energy_values), np.amax(energy_values))
-
-    plt.plot(energy_values, data[:,int(len(t_inp)/2)-1])
     plt.plot(energy_values, I_bl[1:,int(len(t_inp)/2)])
+    plt.plot(energy_values, data[:,int(len(t_inp)/2)-1])
     plt.plot(energy_values, data[:,int(len(t_inp)/2)-1] - I_bl[1:,int(len(t_inp)/2)])
-
-    # plt.legend(['spectrum', 'baseline', 'difference'], loc = 'upper left', bbox_to_anchor=(1,1)) # legend outside frame
-    plt.legend(['spectrum', 'baseline', 'difference'], loc = 'upper right') # legend inside frame
+    # plt.legend(['baseline', 'spectrum', 'difference'], loc = 'upper left', bbox_to_anchor=(1,1)) # legend outside frame
+    plt.legend(['baseline', 'spectrum', 'difference'], loc = 'upper right') # legend inside frame
+    
+    # plot the the last spectrum of the second gasphase and the corresponding baseline and difference spectrum
+    plt.figure(figsize=(10,5))
+    plt.title('Last spectrum 2nd half period')
+    plt.xlabel(x_unit) # get x axis label
+    plt.ylabel(y_unit) # get y axis label
+    #plt.ylim(np.amin(data[1:,1:]), np.amax(data[1:,1:]))
+    plt.xlim(np.amin(energy_values), np.amax(energy_values))
+    plt.plot(energy_values, I_bl[1:,int(len(t_inp))])
+    plt.plot(energy_values, data[:,int(len(t_inp))-1])
+    plt.plot(energy_values, data[:,int(len(t_inp))-1] - I_bl[1:,int(len(t_inp))])
+    # plt.legend(['baseline', 'spectrum', 'difference'], loc = 'upper left', bbox_to_anchor=(1,1)) # legend outside frame
+    plt.legend(['baseline', 'spectrum', 'difference'], loc = 'upper right') # legend inside frame
+    
+    
     
     
     return
