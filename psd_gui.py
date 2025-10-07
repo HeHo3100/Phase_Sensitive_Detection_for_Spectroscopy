@@ -543,7 +543,7 @@ def Show_Graph():
         data_psd = pd.read_csv(r''+name_data, sep="\t", header=0)
         data_psd = data_psd.values
         
-        phi = data_psd[0,1:] # time values [s]
+        phi = data_psd[0,1:] # phase angles [°]
         phi = np.reshape(phi,(phi.size,1))
         phi = phi.astype(int)
         
